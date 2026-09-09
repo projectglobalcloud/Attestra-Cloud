@@ -1,0 +1,73 @@
+{% extends "base_public.html" %}
+{% block title %}Products — Attestra{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="shell">
+    <div class="hero-inner" style="padding:64px 0 56px">
+      <h1>Products designed for <span class="hl-blue">verifiable</span> custody</h1>
+      <p class="hero-sub">
+        One platform, six purpose-built products — from continuous integrity
+        verification to cryptographic ownership transfer. Everything below is live
+        in the console, driving the real protocol.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-blue btn-lg" href="{{ url_for('auth.signup') }}">Start free <span class="arr">→</span></a>
+        <a class="btn btn-line btn-lg" href="{{ url_for('public.free') }}">See the free tier</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="pill-tabs" data-tabs-for="#products-grid" style="margin-top:0">
+      {% for c in categories %}
+      <button class="pill {{ 'active' if loop.first }}" data-filter="{{ c }}">{{ c }}</button>
+      {% endfor %}
+    </div>
+
+    <div class="offer-grid" id="products-grid" style="grid-template-columns:repeat(3,1fr)">
+      {% for slug, p in products.items() %}
+      <a class="offer-card" data-cat="{{ p.category }}" style="min-height:200px"
+         href="{{ url_for('public.product_detail', slug=slug) }}">
+        <span class="cat" style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--mut)">{{ p.category }}</span>
+        <span class="t">{{ p.name }}</span>
+        <span class="offer">{{ p.offer }}</span>
+        <span class="d">{{ p.tagline }}. {{ p.summary[:110] }}…</span>
+        <span class="arr">→</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-2">
+  <div class="shell">
+    <div class="section-head">
+      <h2>Why teams choose Attestra</h2>
+    </div>
+    <table class="cmp">
+      <thead><tr><th>Scenario</th><th>Without Attestra</th><th>With Attestra</th></tr></thead>
+      <tbody>
+        <tr><td>Provider silently drops rarely-read data</td>
+            <td class="bad">Discovered at restore time — too late</td>
+            <td class="good">Caught by routine verification</td></tr>
+        <tr><td>Buyer and provider collude after a sale</td>
+            <td class="bad">Leaked credentials allow fabricated proofs</td>
+            <td class="good">Fabrication remains impossible after handover</td></tr>
+        <tr><td>Partner claims co-ownership it never had</td>
+            <td class="bad">Crafted registrations impersonate joint custody</td>
+            <td class="good">Registration binding rejects impersonation</td></tr>
+        <tr><td>Consortium membership changes</td>
+            <td class="bad">Full group re-key; everyone online</td>
+            <td class="good">Only joining/leaving members do any work</td></tr>
+        <tr><td>Dataset is sold</td>
+            <td class="bad">Re-upload, or shared credentials and hope</td>
+            <td class="good">In-place re-seal; zero data movement</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}

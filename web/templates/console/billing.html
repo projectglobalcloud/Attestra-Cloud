@@ -1,0 +1,132 @@
+{% extends "base_console.html" %}
+{% block title %}Billing{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Billing</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Billing</h1>
+    <p class="page-sub">Usage and charges for account <span class="mono">{{ current_user.account_id }}</span>,
+      computed from this deployment's actual protection, verification and ownership activity.</p>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat">
+    <span class="stat-label">Month-to-date total</span>
+    <span class="stat-value">${{ "%.2f"|format(cycle.total) }}</span>
+    <span class="stat-foot">{{ cycle.period }} · {{ cycle.days_left }} days left in cycle</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Protected storage</span>
+    <span class="stat-value">{{ "%.2f"|format(cycle.storage_gb) }} <span style="font-size:13px">GB</span></span>
+    <span class="stat-foot">of {{ cycle.free_tier.storage_gb|int }} GB included free</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Verifications</span>
+    <span class="stat-value">{{ "{:,}".format(cycle.verifications) }}</span>
+    <span class="stat-foot">of {{ "{:,}".format(cycle.free_tier.verifications) }} included free</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Ownership operations</span>
+    <span class="stat-value">{{ cycle.ownership_ops }}</span>
+    <span class="stat-foot">of {{ cycle.free_tier.ownership_ops }} included free</span>
+  </div>
+</div>
+
+<div class="price-note">
+  <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="M10 9v4.5M10 6.3v.4"/></svg>
+  <div>This account is on the <strong>Free plan</strong>. Monthly allowances are applied before
+    any charge accrues; typical demonstration workloads close the month at $0.00.
+    See the <a href="{{ url_for('public.pricing') }}" target="_blank">published pricing</a> for
+    Team and Enterprise plans.</div>
+</div>
+
+<div class="grid-2-13">
+  <section class="card">
+    <div class="card-head"><div><h2>Current cycle charges</h2>
+      <p class="sub">{{ cycle.period_start.strftime("%d %b") }} – {{ cycle.period_end.strftime("%d %b %Y") }}</p></div></div>
+    <div class="card-body flush">
+      <table class="table">
+        <thead><tr><th>Service</th><th class="num">Usage</th><th>Free allowance</th>
+          <th class="num">Billable</th><th class="num">Amount</th></tr></thead>
+        <tbody>
+          {% for l in cycle.lines %}
+          <tr>
+            <td><strong>{{ l.service }}</strong></td>
+            <td class="num">{{ "{:,}".format(l.usage) if l.usage is integer else "%.3f"|format(l.usage) }} {{ l.usage_unit }}</td>
+            <td class="muted">{{ l.free }}</td>
+            <td class="num">{{ "%.3f"|format(l.billable) if l.billable else "0" }}</td>
+            <td class="num"><strong>${{ "%.2f"|format(l.amount) }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-foot">
+      <span>Estimated total for {{ cycle.period }}</span>
+      <div class="spacer"></div>
+      <strong style="font-size:14px">${{ "%.2f"|format(cycle.total) }}</strong>
+    </div>
+  </section>
+
+  <div>
+    <section class="card">
+      <div class="card-head"><h2>Price sheet</h2></div>
+      <div class="card-body flush">
+        <table class="table">
+          <tbody>
+            <tr><td>Integrity-protected storage</td>
+              <td class="num">${{ "%.3f"|format(cycle.prices.storage_gb_month) }} / GB-month</td></tr>
+            <tr><td>Integrity verification</td>
+              <td class="num">${{ "%.4f"|format(cycle.prices.verification) }} / request</td></tr>
+            <tr><td>Ownership operation</td>
+              <td class="num">${{ "%.2f"|format(cycle.prices.ownership_op) }} / operation</td></tr>
+            <tr><td>Continuous verification scheduling</td>
+              <td class="num muted">included</td></tr>
+            <tr><td>Data transfer</td>
+              <td class="num muted">none — data never moves</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Payment method</h2></div>
+      <div class="card-body">
+        <p><span class="st st-ok">Free plan — no payment method required</span></p>
+        <p class="muted" style="margin-top:8px">Upgrading to Team or Enterprise adds invoice
+          billing with net-30 terms and consolidated statements for consortium members.</p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<section class="card">
+  <div class="card-head"><h2>Invoices</h2></div>
+  <div class="card-body flush">
+    {% if invoices %}
+    <table class="table">
+      <thead><tr><th>Invoice</th><th>Billing period</th><th class="num">Amount</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for inv in invoices %}
+        <tr>
+          <td class="mono">{{ inv.number }}</td>
+          <td>{{ inv.period }}</td>
+          <td class="num">${{ "%.2f"|format(inv.amount) }}</td>
+          <td><span class="st st-ok">{{ inv.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">
+      <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      <p>No closed invoices yet — your first invoice is issued when the current billing
+        cycle ends.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

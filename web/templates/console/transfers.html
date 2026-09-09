@@ -1,0 +1,113 @@
+{% extends "base_console.html" %}
+{% block title %}Ownership &amp; Transfers{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Ownership &amp; Transfers</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Ownership &amp; Transfers</h1>
+    <p class="page-sub">Chain of custody for protected datasets. Membership inside an
+      ownership group is managed here; a change of owner is executed under a signed
+      transfer agreement, so that every completed sale leaves a certificate behind.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="{{ url_for('console.agreements') }}">Raise a transfer agreement</a>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat">
+    <span class="stat-label">How transfer works</span>
+    <span class="stat-value sm">No data movement</span>
+    <span class="stat-foot">the storage layer re-seals blocks in place</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Seller access after sale</span>
+    <span class="stat-value sm">Provably revoked</span>
+    <span class="stat-foot">previous credentials stop verifying</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Membership changes</span>
+    <span class="stat-value sm">No group re-key</span>
+    <span class="stat-foot">work scales with who joins or leaves</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Update size</span>
+    <span class="stat-value sm">Fixed</span>
+    <span class="stat-foot">same for 2 organizations or 200</span>
+  </div>
+</div>
+
+<section class="card" data-table>
+  <div class="card-head"><h2>Datasets and current custody</h2></div>
+  <div class="tbl-toolbar">
+    <div class="tbl-search">
+      <svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5 18 18"/></svg>
+      <input type="text" data-table-search placeholder="Search by dataset, group or member">
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" data-refresh title="Refresh">
+      <svg viewBox="0 0 20 20"><path d="M16.5 8A7 7 0 1 0 17 11"/><path d="M17 4v4h-4"/></svg>
+    </button>
+  </div>
+  <div class="card-body flush">
+    {% if datasets %}
+    <table class="table">
+      <thead><tr><th>Dataset</th><th>Current owner group</th><th>Members</th><th class="actions-col">Actions</th></tr></thead>
+      <tbody>
+        {% for d in datasets %}
+        <tr>
+          <td><a class="link" href="{{ url_for('console.storage_detail', dataset_id=d.id) }}"><strong>{{ d.name }}</strong></a></td>
+          <td>{{ d.group_name }}</td>
+          <td class="muted">{{ d.owners|join(", ") }}</td>
+          <td class="actions-col">
+            <a class="act" href="{{ url_for('console.storage_detail', dataset_id=d.id) }}#tab-ownership">Manage membership</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><p>No active datasets. <a class="link" href="{{ url_for('console.storage') }}">Protect one first.</a></p></div>
+    {% endif %}
+  </div>
+  {% if datasets %}
+  <div class="tbl-foot">
+    <span>Total: <b data-table-total>{{ datasets|length }}</b> item(s)</span>
+  </div>
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Custody log</h2></div>
+  <div class="card-body flush">
+    {% if events %}
+    <ul class="feed">
+      {% for e in events %}
+      <li>
+        {% if e.kind == 'transfer' %}
+          <span class="feed-icon info"><svg viewBox="0 0 20 20"><path d="M4 7h11M12 4l3 3-3 3M16 13H5M8 10l-3 3 3 3"/></svg></span>
+        {% elif e.kind == 'revoke_owner' %}
+          <span class="feed-icon err"><svg viewBox="0 0 20 20"><circle cx="8" cy="7" r="3"/><path d="M3 17c0-2.6 2.2-4 5-4M13 12l5 5M18 12l-5 5"/></svg></span>
+        {% else %}
+          <span class="feed-icon ok"><svg viewBox="0 0 20 20"><circle cx="8" cy="7" r="3"/><path d="M3 17c0-2.6 2.2-4 5-4M15 9v6M12 12h6"/></svg></span>
+        {% endif %}
+        <div>
+          <p>{% if e.dataset_id in names %}<strong>{{ names[e.dataset_id].name }}</strong> — {% endif %}{{ e.summary }}</p>
+          <small>{{ e.created_at.strftime("%d %b %Y, %H:%M UTC") }}</small>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<div class="empty"><p>Membership and transfer activity will appear here.</p></div>{% endif %}
+  </div>
+</section>
+
+<script type="application/json" id="transfer-datasets">
+  [{% for d in datasets %}{"id": {{ d.id }}, "name": "{{ d.name }}", "group": "{{ d.group_name }}"}{{ "," if not loop.last }}{% endfor %}]
+</script>
+
+{% endblock %}
+{% block scripts %}
+<script>/* Ownership changes are executed from Transfer Agreements. */</script>
+{% endblock %}

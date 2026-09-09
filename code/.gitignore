@@ -1,0 +1,25 @@
+# Generated datasets -- large, and fully reproducible from a seed.
+# Regenerate with:  python -m datasets.generate --dataset all --size medium
+datasets/data/
+
+# Simulated CSP storage
+storage/
+
+# Benchmark output. The JSON is small and worth committing if you want the
+# report's numbers to be reproducible without a 40-minute re-run; the rendered
+# figures are derived from it, so they are not.
+benchmarks/results/figures/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store

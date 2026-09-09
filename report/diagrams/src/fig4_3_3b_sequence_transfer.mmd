@@ -1,0 +1,27 @@
+sequenceDiagram
+    autonumber
+    participant S as Sale Group
+    participant B as Buy Group
+    participant C as CSP
+    participant T as TPA
+
+    Note over S,B: sale agreed off-protocol
+    S->>S: h_i = −H₂(sk_i‖a_i)
+    S->>S: aux_i = −sk_i·H₁(pk_i) − x_i,  v_i = u^{x_i}
+    S->>S: Hs ← Hs·g^{H_SG}   (Rs deliberately unchanged)
+    S->>B: ODT_SG = (H_SG, AUX_SG, V_SG)
+
+    B->>B: draw fresh masks a_i′
+    B->>B: h_i = H₂(sk_i′‖a_i′) + a_i′
+    B->>B: aux_i = sk_i′·H₁(pk_i′) − x_i′
+    B->>B: fold ODT_SG into ODT_BG
+    B->>B: Rs ← Rs·∏g^{a_i′},  Hs ← Hs·∏g^{H₂}
+    B->>C: ODT_BG = (H, AUX, V)   ← constant size
+
+    C->>C: σ′_j = σ_j·H₃(F‖j)^H·(u^{m_j})^{AUX}·V^{m_j}  for all j
+    B-->>T: publish updated APK, Rs, Hs
+
+    T->>C: challenge
+    C->>T: proof
+    T-->>B: PASS, buyer now owns and can audit
+    T-->>S: FAIL against old parameters, seller has lost ownership

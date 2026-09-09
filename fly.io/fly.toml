@@ -1,0 +1,63 @@
+# Attestra — Fly.io application configuration
+#
+# Deploy from the PROJECT ROOT (the folder holding code/ and web/):
+#
+#   fly deploy --config fly.io/fly.toml --dockerfile fly.io/Dockerfile
+#
+# `app` is filled in by `fly launch` (or edit it yourself); pick a name that is
+# free across Fly, e.g. attestra-registry.
+
+app = "attestra-registry"
+primary_region = "bom"          # Mumbai. Others: sin, fra, iad — see `fly platform regions`
+
+[build]
+
+[env]
+  ATTESTRA_INSTANCE_DIR = "/data/instance"
+  PORT = "8080"
+  # Uploads are capped here as well as in the app; raise if a client needs to
+  # bring in something larger than 512 MB.
+  ATTESTRA_MAX_UPLOAD_MB = "512"
+  # Hidden sections. Set either to "1" to bring one back.
+  ATTESTRA_ACCESS_KEYS = "0"
+  ATTESTRA_BILLING = "0"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # THE IMPORTANT PART. Protection keys, live protocol state and the
+  # verification scheduler all live in this one process's memory. A machine
+  # that stops loses them — the app rebuilds automatically when someone next
+  # uses a dataset, but the scheduler would sit idle in the meantime. So the
+  # machine stays up.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 40
+    hard_limit = 80
+
+# One machine, deliberately: two would each hold their own copy of the
+# in-memory state and disagree about what is protected.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"                # pairing arithmetic is memory-hungry in pure Python
+  processes = ["app"]
+
+# The database, the uploaded datasets, the registry's issuing key and the
+# session secret all live here and survive every deploy.
+[mounts]
+  source = "attestra_data"
+  destination = "/data"
+
+[checks]
+  [checks.up]
+    type = "http"
+    grace_period = "20s"
+    interval = "30s"
+    timeout = "5s"
+    method = "get"
+    path = "/"

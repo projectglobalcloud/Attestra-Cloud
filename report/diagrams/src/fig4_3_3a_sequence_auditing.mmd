@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    participant O as Data Owners (SG)
+    participant C as CSP
+    participant T as TPA
+
+    Note over O: TagGen, each owner computes σ_ij from its own secrets
+    O->>O: σ_ij = H₃(F‖j)^{H₂(sk_i‖a_i)+a_i} · (u^{m_j})^{sk_i·H₁(pk_i)}
+    O->>O: σ_j = ∏ᵢ σ_ij
+    O->>C: upload {m_j, σ_j} for j = 1..n
+    O-->>T: publish APK, Rs, Hs
+
+    Note over T,C: Audit, repeated on a schedule, data never moves
+    T->>T: sample Q = {(j, v_j)}, c elements
+    T->>C: challenge Q
+    C->>C: DP = Σ m_j·v_j
+    C->>C: TP = ∏ σ_j^{v_j}
+    C->>T: proof P = (DP, TP)  ← constant size
+    T->>T: e(TP, g) ?= e(∏H₃(F‖j)^{v_j}, Hs·Rs) · e(u^{DP}, APK)
+
+    alt equation balances
+        T-->>O: PASS, data intact
+    else equation fails
+        T-->>O: FAIL, do not certify
+    end

@@ -1,0 +1,123 @@
+{% extends "base_console.html" %}
+{% block title %}Settings{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Settings</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Settings</h1>
+    <p class="page-sub">Account profile, credentials and deployment details.</p>
+  </div>
+</div>
+
+<div class="tabs" data-tabs="#settings-panes">
+  <button class="tab active" data-pane="#tab-profile">Profile</button>
+  <button class="tab" data-pane="#tab-security">Security</button>
+  <button class="tab" data-pane="#tab-deployment">Deployment</button>
+</div>
+
+<div id="settings-panes">
+  <div class="tabpane active" id="tab-profile">
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head"><h2>Profile</h2></div>
+        <div class="card-body">
+          <form id="profile-form" class="form-stack" style="max-width:420px">
+            <label>Full name
+              <input type="text" name="name" value="{{ current_user.name }}">
+            </label>
+            <label>Organization
+              <input type="text" name="organization" value="{{ current_user.organization }}">
+            </label>
+            <label>Email
+              <input type="email" value="{{ current_user.email }}" disabled>
+            </label>
+            <div><button class="btn btn-primary" type="submit">Save changes</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Account</h2></div>
+        <div class="card-body flush">
+          <table class="table">
+            <tbody>
+              <tr><td class="muted" style="width:180px">Account ID</td>
+                <td><span class="copy-id mono">{{ current_user.account_id }}
+                  <button data-copy="{{ current_user.account_id }}" title="Copy">
+                    <svg viewBox="0 0 20 20"><rect x="7" y="7" width="9" height="10" rx="1.5"/><path d="M13 7V5a1.5 1.5 0 0 0-1.5-1.5H5.5A1.5 1.5 0 0 0 4 5v8a1.5 1.5 0 0 0 1.5 1.5H7"/></svg>
+                  </button></span></td></tr>
+              <tr><td class="muted">Plan</td><td>Free — <a href="{{ url_for('public.pricing') }}" target="_blank">compare plans</a></td></tr>
+              <tr><td class="muted">Default region</td><td>{{ current_region_name }} ({{ current_region }})</td></tr>
+              <tr><td class="muted">Member since</td><td>{{ current_user.created_at.strftime("%d %B %Y") }}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="tabpane" id="tab-security">
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head"><h2>Password</h2></div>
+        <div class="card-body">
+          <form id="password-form" class="form-stack" style="max-width:420px">
+            <label>Current password
+              <input type="password" name="current" autocomplete="current-password">
+            </label>
+            <label>New password <span class="hint">(minimum 8 characters)</span>
+              <input type="password" name="new" minlength="8" autocomplete="new-password">
+            </label>
+            <div><button class="btn btn-primary" type="submit">Update password</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div><h2>Sign-in history</h2>
+          <p class="sub">Most recent sessions on this account</p></div></div>
+        <div class="card-body flush">
+          {% if logins %}
+          <table class="table">
+            <thead><tr><th>Time</th><th>IP address</th><th>Client</th></tr></thead>
+            <tbody>
+              {% for l in logins %}
+              <tr>
+                <td class="muted">{{ l.created_at.strftime("%d %b %Y, %H:%M UTC") }}</td>
+                <td class="mono">{{ l.ip or "—" }}</td>
+                <td class="muted">{{ l.agent.split(') ')[0] ~ ')' if ') ' in l.agent else l.agent or "—" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="empty"><p>Sign-in history starts recording from your next sign-in.</p></div>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="tabpane" id="tab-deployment">
+    <section class="card">
+      <div class="card-head"><h2>Deployment</h2></div>
+      <div class="card-body flush">
+        <table class="table">
+          <tbody>
+            <tr><td class="muted" style="width:220px">Environment</td><td>Local demonstration deployment</td></tr>
+            <tr><td class="muted">Verification engine</td><td>Attestra protocol core, BLS12-381 curve</td></tr>
+            <tr><td class="muted">Database</td><td>SQLite (MySQL-compatible via <span class="mono">DATABASE_URL</span>)</td></tr>
+            <tr><td class="muted">Key handling</td><td>Signing keys are held in secure memory only and are never written to disk</td></tr>
+            <tr><td class="muted">Continuous verification</td><td>Scheduler active — runs due dataset checks every 30 seconds</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>SettingsPage.init();</script>
+{% endblock %}

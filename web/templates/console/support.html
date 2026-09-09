@@ -1,0 +1,109 @@
+{% extends "base_console.html" %}
+{% block title %}Support Center{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Support Center</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Support Center</h1>
+    <p class="page-sub">Raise a ticket with our engineers, or find product guidance.</p>
+  </div>
+</div>
+
+<div class="grid-2-13">
+  <section class="card">
+    <div class="card-head"><div><h2>Submit a ticket</h2>
+      <p class="sub">Free plan: response within 1 business day</p></div></div>
+    <div class="card-body">
+      <form id="ticket-form" class="form-stack">
+        <label>Subject
+          <input type="text" name="subject" placeholder="Briefly describe the issue" required>
+        </label>
+        <div class="form-row">
+          <label>Category
+            <select name="category">
+              <option>General guidance</option>
+              <option>Storage &amp; onboarding</option>
+              <option>Integrity verification</option>
+              <option>Ownership &amp; transfers</option>
+              <option>Marketplace &amp; offers</option>
+              {% if show_billing %}<option>Billing</option>{% endif %}
+              <option>Account &amp; access</option>
+            </select>
+          </label>
+          <label>Severity
+            <select name="severity">
+              <option>Normal</option>
+              <option>High — service degraded</option>
+              <option>Urgent — production down</option>
+            </select>
+          </label>
+        </div>
+        <label>Details
+          <textarea name="body" placeholder="What happened, what you expected, and any resource names involved"></textarea>
+        </label>
+        <div><button class="btn btn-primary" type="submit">Submit ticket</button></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Common questions</h2></div>
+    <div class="card-body flush">
+      <table class="table">
+        <tbody>
+          <tr><td>Why does a dataset show <em>Needs re-protection</em>?</td>
+            <td class="muted">Protection keys live in secure memory only; a service restart
+              rotates them out. Protect the dataset again from Storage.</td></tr>
+          <tr><td>Why did a verification fail?</td>
+            <td class="muted">Either the storage layer no longer holds the exact data, or the
+              verifying party's credentials were revoked by a transfer.</td></tr>
+          <tr><td>Does a transfer move my data?</td>
+            <td class="muted">No — blocks are re-sealed in place with a fixed-size update.</td></tr>
+          <tr><td>How do schedules affect my bill?</td>
+            <td class="muted">Scheduled verifications count toward the same monthly allowance
+              as manual ones.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<section class="card" data-table>
+  <div class="card-head"><h2>Your tickets</h2></div>
+  <div class="card-body flush">
+    {% if tickets %}
+    <table class="table">
+      <thead><tr><th>Ticket</th><th>Subject</th><th>Category</th><th>Severity</th>
+        <th>Status</th><th>Created</th><th class="actions-col">Actions</th></tr></thead>
+      <tbody>
+        {% for t in tickets %}
+        <tr>
+          <td class="mono">{{ t.ticket_no }}</td>
+          <td><strong>{{ t.subject }}</strong></td>
+          <td class="muted">{{ t.category }}</td>
+          <td>{{ t.severity }}</td>
+          <td><span class="st st-{{ 'info' if t.status == 'open' else 'ok' }}">{{ t.status|capitalize }}</span></td>
+          <td class="muted">{{ t.created_at.strftime("%d %b %Y, %H:%M") }}</td>
+          <td class="actions-col">
+            {% if t.status == 'open' %}
+            <button class="act" data-ticket-resolve="{{ t.id }}">Mark resolved</button>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg>
+      <p>No tickets yet. If anything is unclear, we're one message away.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script>SupportPage.init();</script>
+{% endblock %}

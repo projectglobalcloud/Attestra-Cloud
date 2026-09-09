@@ -1,0 +1,65 @@
+{% extends "base_public.html" %}
+{% block title %}{{ p.name }} — Attestra{% endblock %}
+{% block content %}
+
+<section class="pd-hero">
+  <div class="shell">
+    <span class="pd-cat">{{ p.category }}</span>
+    <h1>{{ p.name }}</h1>
+    <p class="tag">{{ p.tagline }}.</p>
+    <div class="hero-actions">
+      <a class="btn btn-blue btn-lg" href="{{ url_for('auth.signup') }}">Try it free <span class="arr">→</span></a>
+      <a class="btn btn-line btn-lg" href="{{ url_for('public.contact') }}">Talk to sales</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <h2>Overview</h2>
+      <p class="sub">{{ p.summary }}</p>
+    </div>
+    <div class="benefit-grid">
+      {% for title, text in p.benefits %}
+      <div class="benefit">
+        <h3>{{ title }}</h3>
+        <p>{{ text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-2">
+  <div class="shell">
+    <div class="section-head"><h2>At a glance</h2></div>
+    <table class="cmp" style="max-width:760px">
+      <tbody>
+        {% for k, v in p.specs %}
+        <tr><td style="width:46%">{{ k }}</td><td>{{ v }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head section-head-row">
+      <h2>Related products</h2>
+      <a class="link-accent" href="{{ url_for('public.products') }}">All products <span class="arr">→</span></a>
+    </div>
+    <div class="plain-grid">
+      {% for rslug, rp in related %}
+      <a class="plain-item" href="{{ url_for('public.product_detail', slug=rslug) }}">
+        <span class="cat">{{ rp.category }}</span>
+        <span class="t">{{ rp.name }} <span class="arr">→</span></span>
+        <span class="d">{{ rp.tagline }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

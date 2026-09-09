@@ -1,0 +1,221 @@
+{% extends "base_console.html" %}
+{% block title %}{{ p.display_name }}{% endblock %}
+{% block crumbs %}
+<span class="sep">/</span><a href="{{ url_for('console.parties') }}">Ownership Register</a>
+<span class="sep">/</span><span class="here">{{ p.display_name }}</span>
+{% endblock %}
+{% block content %}
+
+<div class="resource-head">
+  <div>
+    <div class="resource-title">
+      <span class="resource-icon">
+        <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.4"/><path d="M3.5 19.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.6"/><path d="M15 14.8c2.6-.5 5.5 1 5.5 4.7"/></svg>
+      </span>
+      <div>
+        <h1>{{ p.display_name }}</h1>
+        <span class="muted" style="font-size:11px">{{ p.legal_name or p.display_name }}</span>
+      </div>
+      <span class="st st-{{ 'ok' if p.verified else 'mut' }}">
+        {{ "Identity verified" if p.verified else "Unverified" }}</span>
+    </div>
+    <dl class="resource-meta">
+      <div><dt>Type</dt><dd>{{ p.type_label }}</dd></div>
+      <div><dt>Register reference</dt><dd class="mono">{{ p.party_ref }}</dd></div>
+      <div><dt>Registration</dt><dd>{{ p.registration_id or "—" }}</dd></div>
+      <div><dt>Jurisdiction</dt><dd>{{ p.jurisdiction or "—" }}</dd></div>
+      <div><dt>Contact</dt><dd>{{ p.contact_email or "—" }}</dd></div>
+      <div><dt>Signs in as</dt><dd>{{ account.email if account else "No login issued" }}</dd></div>
+      {% if p.takes_members %}
+      <div><dt>Members</dt><dd>{{ p.members|length }}</dd></div>{% endif %}
+      <div><dt>Holds</dt><dd>{{ holdings|length }} dataset{{ 's' if holdings|length != 1 }}</dd></div>
+    </dl>
+  </div>
+  <a class="btn btn-ghost" href="{{ url_for('console.parties') }}">All parties</a>
+</div>
+
+{% if p.takes_members and not can_manage %}
+<section class="card">
+  <div class="card-head"><h2>Members of this group</h2></div>
+  <div class="card-body">
+    <p class="muted" style="max-width:80ch">{{ p.display_name }} is a group of
+      {{ p.members|length }} individual{{ 's' if p.members|length != 1 }}. Who they are, and
+      which of them holds a key on which dataset, is visible to the group itself and to the
+      registry — the register publishes that the group exists and what it holds, not the
+      roll of people inside it.</p>
+  </div>
+</section>
+{% endif %}
+
+{% if p.takes_members and can_manage %}
+<section class="card">
+  <div class="card-head sect-head-row">
+    <div><h2>Members of this group</h2>
+      <p class="sub">The owner is whoever registered the group. Collaborators are admitted by
+        email address, and each one gets a protocol identifier of their own.</p></div>
+    {% if can_manage %}
+    <button class="btn btn-primary btn-sm" id="add-member">Add a collaborator</button>{% endif %}
+  </div>
+  <div class="card-body flush">
+    {% if p.members %}
+    <table class="table">
+      <thead><tr>
+        <th>Person</th><th>Role</th><th>Protocol owner id</th><th>Admitted</th>
+        <th>Holds keys on</th><th class="actions-col">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for m in p.members %}
+        {% set held = [] %}
+        {% for row in matrix %}{% if m.slug in row.owner_ids %}{% set _ = held.append(row.dataset) %}{% endif %}{% endfor %}
+        <tr>
+          <td><strong>{{ m.display }}</strong>
+            <div class="muted">{{ m.email }}</div></td>
+          <td><span class="st st-{{ 'ok' if m.role == 'owner' else 'mut' }}">{{ m.role_label }}</span></td>
+          <td><span class="copy-id mono" data-copy="{{ m.slug }}">{{ m.slug }}</span></td>
+          <td class="muted">{{ m.created_at.strftime("%d %b %Y") if m.created_at else "—" }}</td>
+          <td class="muted">
+            {% if held %}{{ held|map(attribute='name')|join(", ") }}
+            {% else %}<span class="st st-warn">none of the group's datasets</span>{% endif %}
+          </td>
+          <td class="actions-col">
+            {% if can_manage and m.role != 'owner' %}
+              <button class="act danger" data-remove-member="{{ m.id }}"
+                      data-party="{{ p.id }}" data-name="{{ m.email }}"
+                      data-holds="{{ held|length }}">Remove from group</button>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><p>Nobody has been added to this group yet.</p></div>
+    {% endif %}
+  </div>
+  <div class="card-foot">
+    Removing somebody from the group does not by itself take their key off a dataset — the two
+    are separate acts, and the table below is where the second one happens. A member who still
+    holds keys cannot be removed until those keys are revoked.
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <div><h2>Who holds the keys, dataset by dataset</h2>
+      <p class="sub">Membership of the group is a legal fact; being on a dataset's ownership
+        group is a cryptographic one. Only the second decides who can prove possession, so both
+        are shown here and each can be changed on its own.</p></div>
+  </div>
+  <div class="card-body flush">
+    {% if matrix %}
+    <table class="table">
+      <thead><tr>
+        <th>Dataset</th><th>State</th>
+        {% for m in p.members %}<th>{{ m.display }}</th>{% endfor %}
+        <th>Other key holders</th>
+      </tr></thead>
+      <tbody>
+        {% for row in matrix %}
+        <tr>
+          <td><a class="link" href="{{ url_for('console.storage_detail', dataset_id=row.dataset.id) }}">
+            <strong>{{ row.dataset.name }}</strong></a>
+            <div class="muted">{{ row.owner_ids|length }} key holder{{ 's' if row.owner_ids|length != 1 }}</div></td>
+          <td>{% if row.dataset.status == 'active' %}<span class="st st-ok">Protected</span>
+              {% else %}<span class="st st-warn">{{ row.dataset.status|capitalize }}</span>{% endif %}</td>
+          {% for cell in row.members %}
+          <td>
+            {% if cell.holds_key %}
+              <span class="st st-ok">Holds a key</span>
+              {% if can_manage and row.dataset.status == 'active' and row.owner_ids|length > 1 %}
+              <div><button class="act danger" data-revoke-owner="{{ cell.member.slug }}"
+                     data-dataset="{{ row.dataset.id }}" data-name="{{ cell.member.display }}"
+                     data-ds-name="{{ row.dataset.name }}">Revoke</button></div>
+              {% endif %}
+            {% else %}
+              <span class="st st-mut">No key</span>
+              {% if can_manage and row.dataset.status == 'active' %}
+              <div><button class="act" data-add-owner="{{ cell.member.slug }}"
+                     data-dataset="{{ row.dataset.id }}" data-name="{{ cell.member.display }}"
+                     data-ds-name="{{ row.dataset.name }}">Admit</button></div>
+              {% endif %}
+            {% endif %}
+          </td>
+          {% endfor %}
+          <td class="muted mono" style="font-size:11px">
+            {{ row.unmatched|join(", ") if row.unmatched else "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><p>This group does not hold any dataset yet. Upload one from Storage,
+      or bid for one on the marketplace.</p></div>
+    {% endif %}
+  </div>
+  <div class="card-foot">
+    Admitting a member re-keys nothing: the existing holders keep their keys, and the new
+    member's key is folded into the group's aggregate. Revoking one is what actually stops that
+    person proving possession — it is the same operation a sale performs, applied to one member.
+  </div>
+</section>
+{% endif %}
+
+{% if not p.takes_members or not can_manage %}
+<section class="card">
+  <div class="card-head"><h2>Holdings</h2></div>
+  <div class="card-body flush">
+    {% if holdings %}
+    <table class="table">
+      <thead><tr><th>Dataset</th><th>Region</th><th>State</th><th class="num">Blocks</th>
+        <th>Key holders</th></tr></thead>
+      <tbody>
+        {% for d in holdings %}
+        <tr>
+          <td><a class="link" href="{{ url_for('console.storage_detail', dataset_id=d.id) }}">{{ d.name }}</a></td>
+          <td class="muted">{{ d.region }}</td>
+          <td>{% if d.status == 'active' %}<span class="st st-ok">Protected</span>
+              {% else %}<span class="st st-warn">{{ d.status|capitalize }}</span>{% endif %}</td>
+          <td class="num">{{ d.n_blocks }}</td>
+          <td class="muted mono" style="font-size:11px">{{ d.owners|join(", ") }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><p>This party does not hold any dataset.</p></div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<section class="card">
+  <div class="card-head"><h2>Instruments this party is named on</h2></div>
+  <div class="card-body flush">
+    {% if agreements %}
+    <table class="table">
+      <thead><tr><th>Reference</th><th>Dataset</th><th>Side</th><th>Consideration</th>
+        <th>Status</th></tr></thead>
+      <tbody>
+        {% for a in agreements %}
+        <tr>
+          <td><a class="link" href="{{ url_for('console.agreement_detail', agreement_id=a.id) }}">{{ a.agreement_ref }}</a></td>
+          <td>{{ a.dataset.name }}</td>
+          <td>{{ "Transferor" if a.seller_party_id == p.id else "Transferee" }}</td>
+          <td>{{ a.consideration_display }}</td>
+          <td><span class="st st-{{ 'ok' if a.status == 'completed'
+                 else ('err' if a.status in ['declined','cancelled'] else 'warn') }}">
+            {{ a.status_label }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><p>No transfer agreement names this party yet.</p></div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script>PartyDetailPage.init({{ p.id }});</script>
+{% endblock %}

@@ -1,0 +1,107 @@
+classDiagram
+    class SystemParams {
+        +int q
+        +G2Point g
+        +G1Point u
+    }
+
+    class OwnerKey {
+        +int sk
+        +G2Point pk
+        +int a
+        +str owner_id
+        +h1() int
+        +h2() int
+        +apk_share() G2Point
+        +h_share() G2Point
+        +r_share() G2Point
+    }
+
+    class GroupState {
+        +G2Point apk
+        +G2Point rs
+        +G2Point hs
+        +bytes file_abstract
+        +int n_blocks
+        +list owner_ids
+    }
+
+    class Challenge {
+        +tuple pairs
+        +size() int
+    }
+
+    class Proof {
+        +int dp
+        +G1Point tp
+    }
+
+    class OwnershipToken {
+        +int h
+        +int aux
+        +G1Point v
+        +combine(other) OwnershipToken
+    }
+
+    class OwnerGroup {
+        +str group_id
+        +list~DataOwner~ members
+        +create(param, id, ids)$ OwnerGroup
+        +tag_file(F, blocks)
+        +add_members(state, ids)
+        +revoke_members(state, ids)
+        +initiate_transfer(state)
+        +accept_transfer(state, token)
+    }
+
+    class DataOwner {
+        +str owner_id
+        +OwnerKey key
+        +str display_name
+    }
+
+    class CloudStorageProvider {
+        +store(id, F, blocks, tags)
+        +generate_proof(id, challenge) Proof
+        +apply_ownership_token(id, token)
+        +corrupt_block(id, index)
+    }
+
+    class ThirdPartyAuditor {
+        +list~AuditRecord~ records
+        +issue_challenge(n, c) Challenge
+        +verify(state, chal, proof) bool
+        +audit(csp, id, state, c) AuditRecord
+        +detection_probability(n, c, rate)$ float
+        +report() str
+    }
+
+    class StoredFile {
+        +str file_id
+        +bytes file_abstract
+        +list blocks
+        +list tags
+        +int tag_version
+    }
+
+    class AuditRecord {
+        +str file_id
+        +bool passed
+        +int challenged_blocks
+        +float detection_probability
+        +float duration_ms
+    }
+
+    OwnerGroup "1" *-- "many" DataOwner
+    DataOwner "1" *-- "1" OwnerKey
+    OwnerGroup ..> GroupState : produces
+    OwnerGroup ..> OwnershipToken : produces
+    CloudStorageProvider "1" *-- "many" StoredFile
+    CloudStorageProvider ..> Proof : generates
+    CloudStorageProvider ..> OwnershipToken : consumes
+    ThirdPartyAuditor "1" *-- "many" AuditRecord
+    ThirdPartyAuditor ..> Challenge : issues
+    ThirdPartyAuditor ..> GroupState : verifies against
+    SystemParams <.. OwnerGroup : uses
+    SystemParams <.. CloudStorageProvider : uses
+    SystemParams <.. ThirdPartyAuditor : uses

@@ -1,0 +1,232 @@
+{% extends "base_public.html" %}
+{% block content %}
+
+<!-- ============================== HERO ============================== -->
+<section class="hero">
+  <div class="shell">
+    <div class="hero-inner">
+      <h1>Your data custody journey<br>starts <span class="hl-accent">here</span></h1>
+      <p class="hero-sub">
+        Attestra makes storage providers <b>prove</b> your datasets are intact —
+        continuously, without downloading a byte — and moves dataset ownership
+        between organizations with <b>cryptographic finality</b>. Try the full
+        platform free with five consortium-scale datasets.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-accent btn-lg" href="{{ url_for('auth.signup') }}">Try now <span class="arr">→</span></a>
+        <a class="btn btn-line btn-lg" href="{{ url_for('public.products') }}">Explore products</a>
+      </div>
+      <p class="hero-note">No credit card required · Full platform, not a limited sandbox</p>
+    </div>
+  </div>
+  <a class="quick-strip" href="{{ url_for('public.trust') }}">
+    <span>Every security claim ships with a live, runnable validation — see the Trust Center</span>
+    <span class="arr">→</span>
+  </a>
+  <div class="quick-tiles">
+    <a class="quick-tile" href="{{ url_for('public.free') }}">
+      <span><span class="t">Free Tier</span><br><span class="d">Everything you can use at no cost</span></span>
+      <span class="arr">→</span>
+    </a>
+    <a class="quick-tile" href="{{ url_for('auth.signup') }}">
+      <span><span class="t">Quick Start</span><br><span class="d">First verification in under five minutes</span></span>
+      <span class="arr">→</span>
+    </a>
+    <a class="quick-tile" href="{{ url_for('public.company') }}#research">
+      <span><span class="t">Research Foundation</span><br><span class="d">Built on peer-reviewed cryptography</span></span>
+      <span class="arr">→</span>
+    </a>
+  </div>
+</section>
+
+<!-- ============================ PRODUCTS ============================ -->
+<section class="section">
+  <div class="shell">
+    <div class="section-head section-head-row">
+      <div>
+        <h2>Building verifiable custody with purpose-built products</h2>
+        <p class="sub">Every capability below is live in the console today — driving a real
+          cryptographic protocol, not a mock.</p>
+      </div>
+      <a class="link-accent" href="{{ url_for('public.products') }}">View all products <span class="arr">→</span></a>
+    </div>
+
+    <div class="pill-tabs" data-tabs-for="#home-products">
+      <button class="pill active" data-filter="All">All products</button>
+      <button class="pill" data-filter="Integrity">Integrity</button>
+      <button class="pill" data-filter="Custody">Custody</button>
+      <button class="pill" data-filter="Governance">Governance</button>
+      <button class="pill" data-filter="Insights">Insights</button>
+    </div>
+
+    <div class="plain-grid" id="home-products">
+      {% for slug, p in products.items() %}
+      <a class="plain-item" data-cat="{{ p.category }}" href="{{ url_for('public.product_detail', slug=slug) }}">
+        <span class="cat">{{ p.category }}</span>
+        <span class="t">{{ p.name }} <span class="arr">→</span></span>
+        <span class="d">{{ p.tagline }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ========================= METRIC TRIO ============================ -->
+<section class="section section-warm">
+  <div class="shell">
+    <div class="section-head">
+      <h2>Powerful custody. Measurably fast.</h2>
+      <p class="sub">Numbers below are live measurements from this deployment — charted
+        in the console's Analytics section, never copied from a datasheet.</p>
+    </div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <span class="cat">Verification</span>
+        <span class="big">~128-byte proofs, any size</span>
+        <span class="for">Perfect for: archives, data lakes, cold storage</span>
+        <p class="d">Proof size and verification cost stay flat whether you protect
+          100 MB or 100 TB. Detection confidence is tunable per check.</p>
+        <a class="btn btn-blue btn-block" href="{{ url_for('public.product_detail', slug='integrity-verification') }}">Learn more</a>
+      </div>
+      <div class="metric-card">
+        <span class="cat">Ownership transfer</span>
+        <span class="big">0 bytes moved per sale</span>
+        <span class="for">Perfect for: data marketplaces, M&amp;A, licensing</span>
+        <p class="d">The storage layer re-seals blocks in place. Buyer verifications
+          pass from completion; seller credentials provably stop working.</p>
+        <a class="btn btn-blue btn-block" href="{{ url_for('public.product_detail', slug='ownership-transfer') }}">Learn more</a>
+      </div>
+      <div class="metric-card">
+        <span class="cat">Consortium scale</span>
+        <span class="big">Linear, not quadratic</span>
+        <span class="for">Perfect for: hospital networks, agency partnerships</span>
+        <p class="d">Group setup and membership changes scale with who is changing —
+          not with how large the group already is.</p>
+        <a class="btn btn-blue btn-block" href="{{ url_for('public.product_detail', slug='consortium-management') }}">Learn more</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= CASE PANEL ============================ -->
+<section class="section">
+  <div class="shell">
+    <div class="section-head section-head-row">
+      <div>
+        <h2>Using verifiable custody to close real transactions</h2>
+        <p class="sub">Consortium scenarios from the live catalog — each one runnable
+          end to end in the console.</p>
+      </div>
+      <a class="link-accent" href="{{ url_for('public.solutions') }}">View all solutions <span class="arr">→</span></a>
+    </div>
+
+    <div class="case-panel">
+      <div class="case-org"><span class="dot">◆</span> Meridian Health Alliance — 3-hospital imaging consortium</div>
+      <div class="case-metrics">
+        <div><b>100%</b><span>challenged storage faults detected</span></div>
+        <div><b>&lt;1 s</b><span>typical verification, any archive size</span></div>
+        <div><b>0</b><span>hospitals re-keyed when membership changes</span></div>
+      </div>
+      <p>Three hospitals pool radiology studies for AI research. Each remains a
+        first-class co-owner: no single institution can transfer the archive alone,
+        a departing hospital provably loses access, and the archive's integrity is
+        verified continuously against the storage provider.</p>
+      <a class="link-accent" href="{{ url_for('public.solutions') }}#healthcare">Read the scenario <span class="arr">→</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= PHOTO CARDS ============================ -->
+<section class="section section-2">
+  <div class="shell">
+    <div class="section-head">
+      <h2>Trusted patterns across industries</h2>
+      <p class="sub">The same custody guarantees, applied to the data that runs
+        healthcare, finance and AI.</p>
+    </div>
+    <div class="photo-grid">
+      <a class="photo-card" href="{{ url_for('public.solutions') }}#financial">
+        <img src="{{ url_for('static', filename='img/story-analytics.jpg') }}" alt="Financial operations dashboards">
+        <div class="photo-cap">Ledgers under statutory audit <span class="arr">→</span></div>
+        <div class="photo-body">A regional bank hands its ledger to an external audit firm —
+          as a verifiable custody event with a complete trail.</div>
+      </a>
+      <a class="photo-card" href="{{ url_for('public.solutions') }}#research">
+        <img src="{{ url_for('static', filename='img/feature-team.jpg') }}" alt="Research consortium meeting">
+        <div class="photo-cap">Genomics sold to pharma <span class="arr">→</span></div>
+        <div class="photo-body">Three sequencing labs license a variant catalog; the sale
+          closes cryptographically, and provenance survives it.</div>
+      </a>
+      <a class="photo-card" href="{{ url_for('public.solutions') }}#ai">
+        <img src="{{ url_for('static', filename='img/hero-datacenter.jpg') }}" alt="AI training infrastructure">
+        <div class="photo-cap">AI corpora with provenance <span class="arr">→</span></div>
+        <div class="photo-body">Labs that must answer for their training data get a
+          continuous, independently checkable custody record.</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ========================== 3 STEPS ============================== -->
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <h2>Get started in 3 simple steps</h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <span class="step-ribbon">STEP 1</span>
+        <div class="in">
+          <h3>Create your free account <span class="arr">→</span></h3>
+          <ol>
+            <li>Sign up with your work email</li>
+            <li>Name your organization</li>
+            <li>No payment method required</li>
+          </ol>
+        </div>
+      </div>
+      <div class="step-card">
+        <span class="step-ribbon">STEP 2</span>
+        <div class="in">
+          <h3>Protect a dataset <span class="arr">→</span></h3>
+          <ol>
+            <li>Pick any of the 5 catalog datasets</li>
+            <li>Choose the co-owning organizations</li>
+            <li>Watch the protection pipeline run live</li>
+          </ol>
+        </div>
+      </div>
+      <div class="step-card">
+        <span class="step-ribbon">STEP 3</span>
+        <div class="in">
+          <h3>Verify — and try to break it <span class="arr">→</span></h3>
+          <ol>
+            <li>Run your first verification</li>
+            <li>Inject a storage fault; watch it get caught</li>
+            <li>Transfer ownership and retire the old keys</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ FAQ ================================ -->
+<section class="section section-2">
+  <div class="shell">
+    <div class="section-head section-head-row">
+      <h2>Frequently asked questions</h2>
+      <a class="link-accent" href="{{ url_for('public.free') }}">More on the Free Tier <span class="arr">→</span></a>
+    </div>
+    <div class="faq">
+      {% for q, a in faq %}
+      <div class="faq-item">
+        <button class="faq-q">{{ q }} <span class="ind">+</span></button>
+        <div class="faq-a"><p>{{ a }}</p></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

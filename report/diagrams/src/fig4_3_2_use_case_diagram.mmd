@@ -1,0 +1,30 @@
+flowchart LR
+    OWNER(("Data Owner<br/>SG / BG"))
+    CSPA(("Cloud Storage<br/>Provider"))
+    TPAA(("Third Party<br/>Auditor"))
+    ATT(("Attacker"))
+
+    UC1(["Generate key pair"])
+    UC2(["Upload & tag dataset"])
+    UC3(["Add group member"])
+    UC4(["Revoke group member"])
+    UC5(["Initiate ownership transfer"])
+    UC6(["Accept ownership transfer"])
+    UC7(["Store blocks & tags"])
+    UC8(["Generate storage proof"])
+    UC9(["Apply ownership token"])
+    UC10(["Issue random challenge"])
+    UC11(["Verify proof"])
+    UC12(["Generate audit report"])
+    UC13(["Tamper with stored data"])
+    UC14(["Attempt rogue-key forgery"])
+    UC15(["Attempt collusion forgery"])
+
+    OWNER --- UC1 & UC2 & UC3 & UC4 & UC5 & UC6
+    CSPA --- UC7 & UC8 & UC9
+    TPAA --- UC10 & UC11 & UC12
+    ATT --- UC13 & UC14 & UC15
+
+    UC11 -.->|"detects"| UC13
+    UC11 -.->|"rejects"| UC14
+    UC11 -.->|"rejects"| UC15

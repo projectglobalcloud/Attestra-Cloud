@@ -1,0 +1,89 @@
+{% extends "base_console.html" %}
+{% block title %}Security Center{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Security Center</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Security Center</h1>
+    <p class="page-sub">Adversarial validations run real attack scenarios against a live
+      deployment of the protocol — first against the legacy designs they defeat, then
+      against Attestra — and report the outcome of each phase.</p>
+  </div>
+</div>
+
+<div class="val-grid">
+  <article class="val-card">
+    <div class="val-card-head">
+      <h3>Collusion resistance</h3>
+      <span class="badge badge-neutral">Adversarial</span>
+    </div>
+    <p class="desc">Models an acquiring party that cooperates with the storage provider after a
+      transaction, attempting to fabricate proofs for data that was never part of the deal.
+      Legacy transfer designs are compromised by this scenario; Attestra is engineered
+      to withstand it.</p>
+    <div class="val-meta"><span>Duration <b>2–4 min</b></span><span>Scope <b>isolated environment</b></span></div>
+    <button class="btn btn-primary" data-validation="collusion">Run validation</button>
+  </article>
+
+  <article class="val-card">
+    <div class="val-card-head">
+      <h3>Key-substitution resistance</h3>
+      <span class="badge badge-neutral">Adversarial</span>
+    </div>
+    <p class="desc">Models an adversary that crafts its registration key from an honest
+      organization's public key, attempting to claim joint ownership of data it never signed.
+      Naive multi-party aggregation accepts this impersonation; Attestra rejects it.</p>
+    <div class="val-meta"><span>Duration <b>1–3 min</b></span><span>Scope <b>isolated environment</b></span></div>
+    <button class="btn btn-primary" data-validation="rogue_key">Run validation</button>
+  </article>
+
+  <article class="val-card">
+    <div class="val-card-head">
+      <h3>Tamper detection</h3>
+      <span class="badge badge-neutral">Fault injection</span>
+    </div>
+    <p class="desc">Alters and deletes blocks at the storage layer, then measures whether
+      routine verification detects every fault — including a statistical sweep of hundreds of
+      sampling trials compared against the theoretical detection model.</p>
+    <div class="val-meta"><span>Duration <b>1–3 min</b></span><span>Scope <b>isolated environment</b></span></div>
+    <button class="btn btn-primary" data-validation="tampering">Run validation</button>
+  </article>
+</div>
+
+<section class="card" id="validation-run" hidden>
+  <div class="card-head">
+    <h2 id="vr-title">Validation</h2>
+    <span id="vr-status"></span>
+  </div>
+  <div class="card-body">
+    <ul class="stepper" id="vr-steps"></ul>
+    <div id="vr-verdicts"></div>
+    <details class="techlog">
+      <summary>Technical execution log</summary>
+      <pre class="joblog" id="vr-log"></pre>
+    </details>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Validation history</h2></div>
+  <div class="card-body flush">
+    {% if validations %}
+    <ul class="feed">
+      {% for v in validations %}
+      <li>
+        <span class="feed-icon ok"><svg viewBox="0 0 20 20"><path d="M10 2l7 3v5c0 4.5-3 7.5-7 8.5C6 17.5 3 14.5 3 10V5z"/><path d="M7.5 10l2 2 3.5-4"/></svg></span>
+        <div><p>{{ v.summary.replace("Attack demonstration", "Validation").replace("'collusion'", "— collusion resistance").replace("'rogue_key'", "— key-substitution resistance").replace("'tampering'", "— tamper detection") }}</p>
+          <small>{{ v.created_at.strftime("%d %b %Y, %H:%M UTC") }}</small></div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<div class="empty"><p>No validations have been run in this deployment yet.</p></div>{% endif %}
+  </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script>SecurityPage.init();</script>
+{% endblock %}

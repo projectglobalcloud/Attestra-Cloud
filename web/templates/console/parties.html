@@ -1,0 +1,160 @@
+{% extends "base_console.html" %}
+{% block title %}Ownership Register{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Ownership Register</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Ownership Register</h1>
+    <p class="page-sub">Every party that can hold or acquire a dataset, recorded as a legal
+      entity rather than a username. A party's register entry is what a deed of transfer
+      names, so identity checks live here and not on the transaction.</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-primary" id="add-party">Register a party</button>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat">
+    <span class="stat-label">Parties on the register</span>
+    <span class="stat-value">{{ parties|length }}</span>
+    <span class="stat-foot">individuals, companies, startups and institutions</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Identity verified</span>
+    <span class="stat-value">{{ n_verified }}</span>
+    <span class="stat-foot">checked against registration documents</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">People named in groups</span>
+    <span class="stat-value">{{ n_people }}</span>
+    <span class="stat-foot">collaborators admitted by email address</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Parties that can sign in</span>
+    <span class="stat-value">{{ accounts|length }}</span>
+    <span class="stat-foot">each signs its own instruments</span>
+  </div>
+</div>
+
+<section class="card" data-table>
+  <div class="card-head"><h2>Registered parties</h2></div>
+  <div class="tbl-toolbar">
+    <div class="tbl-search">
+      <svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5 18 18"/></svg>
+      <input type="text" data-table-search placeholder="Search by name, type or registration">
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" data-refresh title="Refresh">
+      <svg viewBox="0 0 20 20"><path d="M16.5 8A7 7 0 1 0 17 11"/><path d="M17 4v4h-4"/></svg>
+    </button>
+  </div>
+  <div class="card-body flush table-scroll">
+    {% if parties %}
+    <table class="table">
+      <thead><tr>
+        <th style="min-width:190px">Party</th><th style="min-width:92px">Type</th>
+        <th>Reference</th><th>Registration</th>
+        <th>Identity</th><th>Holds</th>
+        <th class="actions-col">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for p in parties %}
+        <tr>
+          <td>
+            <a class="link" href="{{ url_for('console.party_detail', party_id=p.id) }}">
+              <strong>{{ p.display_name }}</strong></a>
+            {% if p.legal_name and p.legal_name != p.display_name %}
+              <div class="muted">{{ p.legal_name }}</div>{% endif %}
+            {% if p.contact_email %}
+              <div class="muted" style="font-size:11px">{{ p.contact_email }}</div>{% endif %}
+            {% set acct = accounts.get(p.id) %}
+            <div class="muted" style="font-size:11px">
+              {% if acct %}signs in as {{ acct.email }}{% else %}no login issued{% endif %}</div>
+          </td>
+          <td>{{ p.type_label }}
+            {% if p.takes_members %}<div class="muted" style="font-size:11px">
+              {{ p.members|length }} member{{ 's' if p.members|length != 1 }}</div>{% endif %}
+          </td>
+          <td><span class="copy-id mono" data-copy="{{ p.party_ref }}">{{ p.party_ref }}</span></td>
+          <td class="muted">{{ p.registration_id or "—" }}{% if p.jurisdiction %}
+            <div class="muted">{{ p.jurisdiction }}</div>{% endif %}</td>
+          <td>
+            <span class="st st-{{ 'ok' if p.verified else 'mut' }}">
+              {{ "Verified" if p.verified else "Unverified" }}</span>
+            {% if p.verified and p.verification_method %}
+              <div class="muted">{{ p.verification_method }}</div>{% endif %}
+          </td>
+          <td class="muted">
+            {% set held = holdings.get(p.id, []) %}
+            {% if held %}{{ held|map(attribute='name')|join(", ") }}{% else %}—{% endif %}
+          </td>
+          <td class="actions-col">
+            <a class="act" href="#" data-edit-party="{{ p.id }}"
+               data-party='{{ {"display_name": p.display_name, "legal_name": p.legal_name,
+                               "party_type": p.party_type,
+                               "registration_id": p.registration_id,
+                               "jurisdiction": p.jurisdiction,
+                               "contact_email": p.contact_email}|tojson }}'>Edit</a>
+            <span class="act-sep">|</span>
+            <a class="act" href="{{ url_for('console.party_detail', party_id=p.id) }}">Open</a>
+            <span class="act-sep">|</span>
+            {% if is_admin and not accounts.get(p.id) %}
+              <a class="act" href="#" data-issue-login="{{ p.id }}"
+                 data-name="{{ p.display_name }}"
+                 data-email="{{ p.contact_email }}">Issue login</a>
+              <span class="act-sep">|</span>
+            {% endif %}
+            {% if not p.verified %}
+              <a class="act" href="#" data-verify-party="{{ p.id }}">Verify identity</a>
+              <span class="act-sep">|</span>
+            {% endif %}
+            <a class="act" href="#" data-delete-party="{{ p.id }}">Remove</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><p>No parties are registered yet. Register one to name it on a transfer.</p></div>
+    {% endif %}
+  </div>
+  {% if parties %}
+  <div class="tbl-foot">
+    <span>Total: <b data-table-total>{{ parties|length }}</b> item(s)</span>
+    <div class="pager" data-table-pager></div>
+  </div>
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>What a register entry is for</h2></div>
+  <div class="card-body">
+    <p class="muted" style="max-width:70ch">
+      The protocol proves that a set of keys controls a dataset. It has nothing to say about
+      who those keys belong to in law. A register entry closes that gap: it binds a
+      protocol-level owner identifier to a named entity, its registration number and the
+      jurisdiction it answers to, so that when a deed is later read by someone outside this
+      platform there is an actual counterparty on the page.
+    </p>
+    <p class="muted" style="max-width:70ch">
+      Signing keys are generated per party and held in custody by the registry. That is the
+      same arrangement an electronic-signature provider operates under, and every certificate
+      states it plainly rather than implying a stronger guarantee than is being given.
+    </p>
+    <p class="muted" style="max-width:70ch">
+      A <strong>group of individuals</strong> is registered like a shared repository: whoever
+      creates it is its owner, and collaborators are admitted by email address. The distinction
+      matters cryptographically as well as legally — when a group holds a dataset it is the
+      members who are the co-owners, each with their own key, so admitting or removing one
+      person does not re-key anybody else. A company, by contrast, is one legal person and
+      signs as one.
+    </p>
+  </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script>PartiesPage.init({{ party_types|tojson }}, {{ membership_types|tojson }});</script>
+{% endblock %}

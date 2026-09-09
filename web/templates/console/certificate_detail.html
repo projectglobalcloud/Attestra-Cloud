@@ -1,0 +1,110 @@
+{% extends "base_console.html" %}
+{% block title %}{{ cert.certificate_id }}{% endblock %}
+{% block crumbs %}<span class="sep">/</span><a href="{{ url_for('console.certificates_page') }}">Certificates</a><span class="sep">/</span><span class="here">{{ cert.certificate_id }}</span>{% endblock %}
+{% block content %}
+
+<div class="resource-head">
+  <div>
+    <div class="resource-title">
+      <span class="resource-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="9.5" r="6"/><path d="M9.2 9.7 11.2 11.7l3.6-4"/><path d="M8.4 15 7 22l5-2.4 5 2.4-1.4-7"/></svg>
+      </span>
+      <div>
+        <h1 class="mono">{{ cert.certificate_id }}</h1>
+        <span class="muted" style="font-size:11px">Deed of dataset ownership transfer</span>
+      </div>
+      <span class="st st-{{ 'ok' if report.valid else 'err' }}">
+        {{ "All checks pass" if report.valid else "Checks failed" }}</span>
+    </div>
+    <dl class="resource-meta">
+      <div><dt>Asset</dt><dd>{{ cert.payload.asset.name }}</dd></div>
+      <div><dt>Transferor</dt><dd>{{ cert.payload.parties.transferor.legal_name }}</dd></div>
+      <div><dt>Transferee</dt><dd>{{ cert.payload.parties.transferee.legal_name }}</dd></div>
+      <div><dt>Instrument</dt><dd>{{ cert.payload.instrument.agreement_ref }}</dd></div>
+      <div><dt>Issued</dt><dd>{{ cert.issued_at.strftime("%d %b %Y, %H:%M") }}</dd></div>
+    </dl>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-primary" href="{{ url_for('market.certificate_document', certificate_id=cert.certificate_id) }}" target="_blank">Open document</a>
+    <a class="btn btn-ghost" href="{{ url_for('market.certificate_json', certificate_id=cert.certificate_id) }}" target="_blank">Signed JSON</a>
+  </div>
+</div>
+
+<section class="card">
+  <div class="card-head"><h2>Verification report</h2>
+    <span class="muted">Re-run now, from the stored document — not from a cached result</span></div>
+  <div class="card-body">
+    <div class="verdict-row">
+      {% for c in report.checks %}
+      <div class="verdict {{ 'verdict-good' if c.passed else 'verdict-bad' }}">
+        <strong>{{ c.label }}</strong>
+        <span>{{ c.detail }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% set b = cert.payload.evidence.bls_signatures %}
+{% if b %}
+<section class="card">
+  <div class="card-head"><h2>BLS12-381 signatures</h2>
+    <span class="muted">The signature material the transfer itself produced</span></div>
+  <div class="card-body">
+    <p class="muted" style="max-width:80ch;margin-bottom:12px">The group public key is the
+      aggregate of every current owner's key. It is a different value before and after the
+      sale — that difference <em>is</em> the transfer. The aggregated tags below are the
+      signatures the storage provider produced to prove it still held the data, each checked
+      by the auditor against the key of the moment.</p>
+    <div class="bls-block" style="margin-top:0">
+      <div class="bls-row"><span class="bls-label">Curve</span>
+        <code class="bls-value">{{ b.curve }}</code></div>
+      <div class="bls-row"><span class="bls-label">Group public key, before the sale</span>
+        <code class="bls-value">{{ b.group_public_key_before }}</code></div>
+      <div class="bls-row"><span class="bls-label">Group public key, after the sale</span>
+        <code class="bls-value">{{ b.group_public_key_after }}</code></div>
+      <div class="bls-row"><span class="bls-label">Aggregated tag, possession before</span>
+        <code class="bls-value">{{ b.proof_before_sale }}</code></div>
+      <div class="bls-row"><span class="bls-label">Aggregated tag, possession after</span>
+        <code class="bls-value">{{ b.proof_after_sale }}</code></div>
+      <div class="bls-row"><span class="bls-label">Encoding</span>
+        <code class="bls-value">{{ b.encoding }}</code></div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% set auth = cert.payload.authorisation %}
+{% if auth and auth.basis == 'registry approval' %}
+<section class="card">
+  <div class="card-head"><h2>Authority for this transfer</h2>
+    <span class="muted">Recorded because the transferor did not counter-sign</span></div>
+  <div class="card-body">
+    <div class="cost-rows">
+      <div class="cost-line"><span>Basis</span><b>Registry approval on application</b></div>
+      <div class="cost-line"><span>Approved by</span><b>{{ auth.approved_by }}</b></div>
+      {% if auth.approved_by_account %}
+      <div class="cost-line"><span>Account</span><b>{{ auth.approved_by_account }}</b></div>{% endif %}
+      {% if auth.note %}
+      <div class="cost-line"><span>Note on the record</span><b>{{ auth.note }}</b></div>{% endif %}
+      <div class="cost-line"><span>Signatures actually given</span>
+        <b>{{ auth.signatures_present|join(", ") or "none" }}</b></div>
+    </div>
+    <p class="muted" style="max-width:80ch;margin-top:12px">{{ auth.description }}</p>
+  </div>
+</section>
+{% endif %}
+
+<section class="card">
+  <div class="card-head"><h2>Signed body</h2>
+    <span class="muted">Exactly the bytes the registry signature covers</span></div>
+  <div class="card-body">
+    <div class="joblog" style="max-height:420px">{{ cert.payload_json }}</div>
+    <div class="cost-rows" style="margin-top:16px">
+      <div class="cost-line"><span>Document hash (SHA-256)</span><b class="mono">{{ cert.payload_hash }}</b></div>
+      <div class="cost-line"><span>Registry signature</span><b class="mono">{{ cert.signature[:44] }}…</b></div>
+      <div class="cost-line"><span>Issuer public key</span><b class="mono">{{ cert.issuer_key }}</b></div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base_public.html" %}
+{% block title %}Trust Center — Attestra{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="shell">
+    <div class="hero-inner" style="padding:64px 0 56px">
+      <h1>We attack our own platform — <span class="hl-blue">live</span></h1>
+      <p class="hero-sub">Attestra's security claims are not slideware. Every claim is
+        backed by an executable validation you can run in the console: the same
+        attack, executed against the legacy designs it defeats and against Attestra,
+        side by side.</p>
+      <div class="hero-actions">
+        <a class="btn btn-blue btn-lg" href="{{ url_for('auth.signup') }}">Run the validations <span class="arr">→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <h2>The threat model</h2>
+      <p class="sub">We assume the storage provider is <em>semi-trusted</em>: it follows
+        the protocol but has every commercial incentive to cut corners — and may
+        cooperate with other parties after a transaction. We assume buyers and
+        sellers act in their own interest. We assume goodwill nowhere.</p>
+    </div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <span class="cat">Scenario 01</span>
+        <span class="big">Post-sale collusion</span>
+        <span class="for">Adversary: buyer + storage provider</span>
+        <p class="d">After a transaction, the acquiring party cooperates with the
+          provider to fabricate possession proofs for data outside the deal. Legacy
+          transfer schemes fall here; Attestra removes the leverage entirely.</p>
+      </div>
+      <div class="metric-card">
+        <span class="cat">Scenario 02</span>
+        <span class="big">Key substitution</span>
+        <span class="for">Adversary: rogue partner organization</span>
+        <p class="d">An adversary crafts its registration from an honest
+          organization's key to claim joint custody. Attestra binds every
+          registration to its holder, closing the impersonation path.</p>
+      </div>
+      <div class="metric-card">
+        <span class="cat">Scenario 03</span>
+        <span class="big">Silent tampering</span>
+        <span class="for">Adversary: the storage layer itself</span>
+        <p class="d">The provider alters or discards blocks. Any challenged
+          alteration fails verification deterministically; sampling makes escaping
+          routine checks statistically untenable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-2">
+  <div class="shell">
+    <div class="section-head"><h2>Current validation status: all passing</h2></div>
+    <table class="cmp">
+      <thead><tr><th>Validation</th><th>Legacy designs</th><th>Attestra</th></tr></thead>
+      <tbody>
+        <tr><td>Collusion resistance</td>
+            <td class="bad">Compromised — fabricated proofs accepted</td>
+            <td class="good">Protected</td></tr>
+        <tr><td>Key-substitution resistance</td>
+            <td class="bad">Compromised — impersonation accepted</td>
+            <td class="good">Protected</td></tr>
+        <tr><td>Tamper detection</td>
+            <td class="bad">No inherent detection</td>
+            <td class="good">Detected in every trial</td></tr>
+      </tbody>
+    </table>
+    <p class="hero-note" style="margin-top:16px">Each validation also confirms the
+      defence causes no collateral damage: honest verifications and genuine joint
+      signatures continue to pass throughout.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head"><h2>How the platform is engineered</h2></div>
+    <div class="plain-grid">
+      <div class="plain-item"><span class="t">Keys never touch disk</span>
+        <span class="d">Organization signing keys are generated in-process and held in
+        secure memory only. A restart retires them; there is nothing on disk to steal.</span></div>
+      <div class="plain-item"><span class="t">41-case correctness suite</span>
+        <span class="d">Honest operation, every failure path, and the security-critical
+        invariants that future changes must never break — all pinned by tests.</span></div>
+      <div class="plain-item"><span class="t">Peer-reviewed foundation</span>
+        <span class="d">The verification engine implements a design published in a 2025
+        IEEE journal, independently implemented and validated end to end.</span></div>
+      <div class="plain-item"><span class="t">Measured, not promised</span>
+        <span class="d">Every performance number on this site is a live measurement from
+        the deployment you're using, charted in the console.</span></div>
+      <div class="plain-item"><span class="t">Synthetic data only</span>
+        <span class="d">The catalog contains no real personal, clinical or financial
+        records — demonstrations carry zero privacy risk.</span></div>
+      <div class="plain-item"><span class="t">Transparent limitations</span>
+        <span class="d">Demo sizing, backend trade-offs and deviations from the
+        published design are documented, not hidden.</span></div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

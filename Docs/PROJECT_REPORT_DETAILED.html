@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cloud-Based Auditing with Ownership Transfer, Detailed Project Report</title>
+<style>
+  @page { size: A4; margin: 11mm 12mm; }
+
+  :root{
+    --ink:#12161c; --ink2:#3d4654; --muted:#6b7280;
+    --line:#dfe3e9; --bg:#ffffff; --tint:#f5f7fa;
+    --blue:#2a78d6; --orange:#eb6834; --green:#0f8a5f; --red:#c8332f; --violet:#4a3aa7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:#e9ecf1; color:var(--ink);
+    font:8.9pt/1.34 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{
+    width:210mm; height:297mm; margin:8mm auto; padding:11mm 12mm;
+    background:var(--bg); box-shadow:0 2px 18px rgba(20,30,50,.13); overflow:hidden;
+  }
+
+  h1{font-size:15pt; line-height:1.15; margin:0 0 1.5mm; letter-spacing:-.25px;}
+  .sub{color:var(--ink2); font-size:9pt; margin:0 0 1mm;}
+  .meta{color:var(--muted); font-size:7.5pt; line-height:1.35; margin:0;}
+  h2{
+    font-size:9.8pt; margin:3mm 0 1.4mm; padding-bottom:1mm;
+    border-bottom:1.8px solid var(--ink); letter-spacing:-.1px;
+  }
+  h3{font-size:8.9pt; margin:0 0 1mm; color:var(--ink);}
+  p{margin:0 0 1.5mm;}
+  strong{font-weight:650;}
+  .lead{font-size:9.6pt; color:var(--ink2);}
+  .rule{height:2.5px; background:var(--ink); margin:2.4mm 0 2.8mm; border:0;}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:3.6mm;}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:3.2mm;}
+  .grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:2.8mm;}
+
+  .card{border:1px solid var(--line); border-radius:4px; padding:2.4mm 2.8mm; background:var(--tint);}
+  .card p{margin-bottom:0; font-size:8pt; color:var(--ink2); line-height:1.35;}
+  .card.hi{background:#fff; border-left:3px solid var(--blue);}
+
+  .stat{border:1px solid var(--line); border-left:3px solid var(--blue);
+        border-radius:4px; padding:2.2mm 2.8mm; background:#fff;}
+  .stat .n{font-size:14pt; font-weight:700; line-height:1.02; color:var(--blue);}
+  .stat .l{font-size:7.4pt; color:var(--muted); margin-top:.8mm; line-height:1.3;}
+
+  table{width:100%; border-collapse:collapse; font-size:8pt; margin:1.2mm 0 2mm;}
+  th{
+    text-align:left; font-weight:650; font-size:7.3pt; text-transform:uppercase;
+    letter-spacing:.35px; color:var(--muted); border-bottom:1.4px solid var(--ink);
+    padding:1mm 1.5mm;
+  }
+  td{padding:1mm 1.4mm; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.33;}
+  td.num{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  .small{color:var(--muted); font-size:7.5pt; display:block; margin-top:.3mm;}
+
+  .ok{color:var(--green); font-weight:650;}
+  .bad{color:var(--red); font-weight:650;}
+  .tag{display:inline-block; font-size:6.9pt; font-weight:650; padding:.35mm 1.5mm;
+       border-radius:3px; background:#e7f3ec; color:var(--green); letter-spacing:.2px;}
+  .kw{font-weight:650; color:var(--violet);}
+
+  .quote{
+    border-left:3px solid var(--orange); background:#fdf3ee;
+    padding:1.8mm 2.6mm; margin:1.6mm 0; font-size:8.3pt; color:var(--ink2); line-height:1.4;
+  }
+  .quote strong{color:var(--ink);}
+
+  .step{display:flex; gap:2.4mm; margin-bottom:1.3mm; align-items:flex-start;}
+  .step .num{
+    flex:0 0 6.5mm; height:6.5mm; border-radius:50%; background:var(--blue); color:#fff;
+    font-size:8pt; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .step .body{flex:1; font-size:8.2pt; line-height:1.33;}
+  .step .body b{display:block; font-size:8.8pt; margin-bottom:.3mm;}
+
+  ul{margin:0 0 1.7mm; padding-left:4.2mm;}
+  li{margin-bottom:.75mm; line-height:1.34;}
+
+  .foot{margin-top:2.4mm; padding-top:1.4mm; border-top:1px solid var(--line);
+        font-size:7.2pt; color:var(--muted); line-height:1.35;}
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:7.9pt;
+       background:var(--tint); padding:.2mm 1mm; border-radius:2px;}
+
+  @media print{
+    body{background:#fff;}
+    .page{margin:0; padding:0; box-shadow:none; width:auto; height:auto; overflow:visible;}
+    .page + .page{page-break-before:always;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================= PAGE 1, THE PROBLEM ======================= -->
+<div class="page">
+
+  <h1>Cloud-Based Auditing System with Efficient Ownership Management for Group Data Transactions</h1>
+  <p class="sub">A complete working implementation of an IEEE 2025 research protocol, with measured proof and executed attacks.</p>
+  <p class="meta">Dept. of Information Science &amp; Engineering, Global Academy of Technology · Major Project Phase I (ISEP23605), AY 2026-27 · Base paper: Wu, You &amp; Huang, <em>IEEE Transactions on Information Forensics and Security</em>, vol. 20, 2025 · DOI 10.1109/TIFS.2025.3636056</p>
+
+  <hr class="rule">
+
+  <h2>1. The problem</h2>
+  <p class="lead">You put a very large dataset in the cloud. Two awkward questions follow, and ordinary software cannot answer either one.</p>
+
+  <div class="grid2" style="margin-top:2mm">
+    <div class="card">
+      <h3>Is my data still there, and still correct?</h3>
+      <p>You cannot download 100 GB every week to check. The cloud provider has a quiet financial incentive to delete data nobody reads, and then claim it is fine. Disks also fail on their own, silently.</p>
+    </div>
+    <div class="card">
+      <h3>What happens when I sell it?</h3>
+      <p>Datasets are traded every day: hospitals, banks, labs, AI vendors. The buyer must genuinely gain the power to check the data, and the seller must genuinely lose it. Editing a row in a database does not achieve that.</p>
+    </div>
+  </div>
+
+  <h2>2. Why existing research is not enough</h2>
+  <p>Researchers solved the first question decades ago with <span class="kw">Provable Data Possession (PDP)</span>: a way to prove a file is intact without downloading it. It was later extended to allow selling, called <span class="kw">DT-PDP</span>. Both work well for a <strong>single owner</strong>.</p>
+  <p>They break down when data is owned by a <strong>group</strong>, which is how valuable data is actually held: three hospitals, two sequencing labs, or a bank plus its custodian. Two specific failures follow.</p>
+
+  <table>
+    <thead><tr><th style="width:47%">The failure</th><th>What it costs in practice</th></tr></thead>
+    <tbody>
+      <tr><td><strong>No scalability.</strong> A group is treated as one fixed block. Adding or removing a single member is handled as a full group-to-group handover.</td>
+          <td>Cost grows with the <strong>square</strong> of the number of owners, written <span class="kw">O(s²)</span>. A 20-member consortium costs 400 units of work, not 20.</td></tr>
+      <tr><td><strong>A secret leaks during the sale.</strong> The protocol requires the seller to hand its <span class="kw">index secret key</span> to the buyer in plain sight.</td>
+          <td>A buyer who then teams up with the cloud, a <span class="kw">collusion attack</span>, can forge proofs for data that was <strong>never sold</strong>. The seller is told their data is safe when it is already gone.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3. What this project delivers</h2>
+  <p>A complete implementation of the protocol that fixes both, and, crucially, <strong>proof by execution</strong>: real attacks run against real code, with performance measured rather than claimed.</p>
+
+  <div class="grid3" style="margin:2.2mm 0 2.4mm">
+    <div class="stat"><div class="n">10.5×</div><div class="l">Faster group setup at 20 owners, and the advantage <em>grows</em> with group size</div></div>
+    <div class="stat"><div class="n">174×</div><div class="l">Faster to remove an owner from a 40-member group</div></div>
+    <div class="stat"><div class="n">160<span style="font-size:9.5pt"> bytes</span></div><div class="l">To transfer ownership, of <em>any</em> dataset size, <em>any</em> group size</div></div>
+  </div>
+
+  <div class="quote">
+    <strong>In one sentence:</strong> a group of hospitals can prove their dataset is intact in the cloud <strong>without downloading any of it</strong>, add and remove members freely, and then <strong>sell it</strong>, after which the buyer can verify the data and the sellers provably cannot.
+  </div>
+
+  <h2>4. Verified status</h2>
+  <table>
+    <thead><tr><th style="width:41%">Component</th><th style="width:31%">Evidence</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>All 6 protocol algorithms</td><td>41 automated tests</td><td><span class="tag">41 / 41 PASSING</span></td></tr>
+      <tr><td>Full lifecycle demonstration</td><td>Upload → audit → add → remove → sell</td><td><span class="tag">7 / 7 AS EXPECTED</span></td></tr>
+      <tr><td>Large sample datasets</td><td>5 real-world sale scenarios, up to 512 MB</td><td><span class="tag">GENERATED</span></td></tr>
+      <tr><td>Three security attacks</td><td>Each run against old method <em>and</em> ours</td><td><span class="tag">ALL DEFENDED</span></td></tr>
+      <tr><td>Performance benchmarks</td><td>39-minute measured run, 6 result charts</td><td><span class="tag">MEASURED</span></td></tr>
+    </tbody>
+  </table>
+
+  <p class="foot">Page 1 of 4 &nbsp;·&nbsp; 6,058 lines of Python &nbsp;·&nbsp; 3 dependencies &nbsp;·&nbsp; runs on any laptop, no special hardware</p>
+</div>
+
+<!-- ======================= PAGE 2, HOW IT WORKS ======================= -->
+<div class="page">
+
+  <h2>5. The four parties</h2>
+  <p>The system models four roles. What matters most is <strong>who is trusted with what</strong>: the design assumes the cloud may lie.</p>
+
+  <table>
+    <thead><tr><th style="width:22%">Party</th><th style="width:30%">Who they are</th><th style="width:22%">Trusted?</th><th>Never sees</th></tr></thead>
+    <tbody>
+      <tr><td><span class="kw">Sale Group (SG)</span></td><td>The owners today: e.g. 3 hospitals</td><td>Yes, but no one acts alone</td><td>Each other's secret keys</td></tr>
+      <tr><td><span class="kw">Cloud (CSP)</span></td><td>The storage company</td><td><strong>No</strong>, assumed it may delete or lie</td><td>Any secret key or mask</td></tr>
+      <tr><td><span class="kw">Auditor (TPA)</span></td><td>Independent inspector</td><td>Yes, to stay impartial</td><td>The data itself, ever</td></tr>
+      <tr><td><span class="kw">Buy Group (BG)</span></td><td>The purchaser</td><td>Must <em>earn</em> ownership</td><td>Any seller secret key</td></tr>
+    </tbody>
+  </table>
+
+  <h2>6. The six algorithms, in plain words</h2>
+
+  <div class="step"><div class="num">1</div><div class="body"><b>SysGen, set up the playing field</b>
+  Creates the shared mathematical parameters. Critically, two special numbers are generated so that <strong>nobody, not even us</strong>: can know the hidden relationship between them. If anyone could, they could forge every proof in the system.</div></div>
+
+  <div class="step"><div class="num">2</div><div class="body"><b>KeyGen, every owner makes its own keys</b>
+  Each owner independently creates a private and public key: no meeting, no shared secret. <strong>This is the step that is 10× faster</strong>, because each owner is bound using a fingerprint of its <em>own</em> key rather than of everyone else's.</div></div>
+
+  <div class="step"><div class="num">3</div><div class="body"><b>TagGen, seal the data</b>
+  The file is cut into blocks. For each block every owner creates a cryptographic "wax seal", a <span class="kw">homomorphic tag</span> built with <span class="kw">BLS signatures</span>. The seals multiply into <strong>one seal per block</strong> containing all owners. No owner can remove another's contribution; no outsider can fake one.</div></div>
+
+  <div class="step"><div class="num">4</div><div class="body"><b>Audit, the inspection</b>
+  The auditor picks blocks <strong>at random</strong> and demands proof. The cloud replies with just <strong>two values (~128 bytes)</strong>: never the data. Randomness is essential: a predictable check would let the cloud keep only those blocks and bin the rest.</div></div>
+
+  <div class="step"><div class="num">5</div><div class="body"><b>OwnerModify, members join and leave</b>
+  A joining or leaving owner sends one small <span class="kw">Ownership Dynamic Token (ODT)</span>; the cloud updates every seal. Existing owners do nothing: no re-keying, no need to even be online.</div></div>
+
+  <div class="step"><div class="num">6</div><div class="body"><b>OwnerTransfer, the sale</b>
+  Sellers cancel their contribution and produce a token; buyers add theirs and fold the two into <strong>one</strong> token sent to the cloud. The buyer never receives any seller secret: only a blinded, aggregated token.</div></div>
+
+  <h2>7. The single trick that makes it secure</h2>
+  <p>Every owner mixes a secret <span class="kw">random mask</span> into every seal. Only a <em>combined total</em> is ever published, and a total cannot be reversed back into its parts.</p>
+  <div class="quote">
+    When an owner leaves, their mask is <strong>deliberately left behind</strong>, baked into every seal forever. It looks like a bug. It is the entire defence: even if a buyer obtains the key the old system leaked, the sellers' masks are still welded in and cannot be stripped out. <em>We wrote a test that fails loudly if anyone ever "cleans this up."</em>
+  </div>
+
+  <h2>8. What the live demo shows</h2>
+  <p>Running <code>python3 -m demo.run_demo</code> plays out a full story on a real 25 MB hospital dataset, and the auditor's verdict is checked at every stage:</p>
+  <table>
+    <thead><tr><th style="width:8%">Step</th><th style="width:56%">What happens</th><th>Auditor result</th></tr></thead>
+    <tbody>
+      <tr><td>1–4</td><td>3 hospitals set up keys and seal 33 blocks of real data</td><td>—</td></tr>
+      <tr><td>5</td><td>Honest cloud is inspected</td><td class="ok">PASS ✓</td></tr>
+      <tr><td>6</td><td><strong>Cloud secretly corrupts a block</strong></td><td class="bad">FAIL ✓ <span class="small">caught, this failure is a success</span></td></tr>
+      <tr><td>7</td><td>A fourth hospital joins the consortium</td><td class="ok">PASS ✓</td></tr>
+      <tr><td>8</td><td>An original hospital leaves</td><td class="ok">PASS ✓</td></tr>
+      <tr><td>9a</td><td><strong>Dataset is SOLD</strong>, buyer inspects it</td><td class="ok">PASS ✓</td></tr>
+      <tr><td>9b</td><td>Seller tries with their old credentials</td><td class="bad">FAIL ✓ <span class="small">ownership truly moved</span></td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:.6mm"><strong>Step 9b is the most important line in the project.</strong> Ownership did not change in a database row someone could edit back, it changed <em>mathematically</em>. Neither the seller nor a corrupt employee can undo it.</p>
+
+  <p class="foot">Page 2 of 4 &nbsp;·&nbsp; All six algorithms are implemented from the paper's equations, not from any existing library</p>
+</div>
+
+<!-- ======================= PAGE 3, SECURITY & RESULTS ======================= -->
+<div class="page">
+
+  <h2>9. The three attacks, the strongest part of this project</h2>
+  <p>Anyone can claim a system is secure. Each attack is <strong>executed twice</strong>: once against the older published method, once against ours. Showing only the defence would prove nothing: a system that rejects everything also rejects attacks.</p>
+
+  <table>
+    <thead><tr><th style="width:33%">Attack</th><th style="width:33%">Older published method</th><th>This project</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Collusion</strong><span class="small">Buyer teams up with the cloud, using the key the old protocol forces the seller to hand over</span></td>
+        <td class="bad">BROKEN, accepted a proof for a block the cloud had <em>deleted</em></td>
+        <td class="ok">BLOCKED, identical attack rejected</td>
+      </tr>
+      <tr>
+        <td><strong>Rogue-key attack</strong><span class="small">Faking co-ownership of a dataset belonging to strangers</span></td>
+        <td class="bad">BROKEN, the forgery was accepted as genuine</td>
+        <td class="ok">BLOCKED, and real signatures still work</td>
+      </tr>
+      <tr>
+        <td><strong>Data tampering</strong><span class="small">Malice, or an ordinary failing disk</span></td>
+        <td colspan="2" class="ok">CAUGHT EVERY TIME, including a block deleted and replaced with zeros</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="quote">
+    In the collusion test the attacker was deliberately handed <strong>more secret information than the real protocol would ever leak</strong>. The attack still failed. That is a far stronger result than merely following the rules.
+  </div>
+
+  <h2>10. Measured performance</h2>
+  <p>The paper's central claim is that cost should grow <em>in step with</em> group size, <span class="kw">O(s)</span>, rather than <em>with its square</em>, <span class="kw">O(s²)</span>. Tested directly by doubling the group:</p>
+
+  <table>
+    <thead><tr><th style="width:34%">Group setup cost</th><th class="num">10 owners</th><th class="num">20 owners</th><th class="num">Growth on doubling</th></tr></thead>
+    <tbody>
+      <tr><td><strong>This project</strong></td><td class="num">746 ms</td><td class="num">1,486 ms</td><td class="num ok">1.99× &nbsp;(ideal 2×)</td></tr>
+      <tr><td>Older method</td><td class="num">4,076 ms</td><td class="num">15,540 ms</td><td class="num bad">3.81× &nbsp;(ideal 4×)</td></tr>
+    </tbody>
+  </table>
+
+  <p>Doubling the group <strong>doubles</strong> our cost but nearly <strong>quadruples</strong> theirs, so the advantage widens as groups grow: <strong>1.1×</strong> at one owner, <strong>10.5×</strong> at twenty, roughly <strong>50×</strong> projected at a hundred.</p>
+
+  <table>
+    <thead><tr><th style="width:44%">Operation</th><th class="num">This project</th><th class="num">Older method</th><th class="num">Advantage</th></tr></thead>
+    <tbody>
+      <tr><td>Add 20 owners to a group of 20</td><td class="num">2,445 ms</td><td class="num">60,568 ms</td><td class="num ok">25×</td></tr>
+      <tr><td>Remove 5 owners from a group of 40</td><td class="num">272 ms</td><td class="num">47,376 ms</td><td class="num ok">174×</td></tr>
+      <tr><td>Transfer ownership (20 ↔ 20 owners)</td><td class="num">3,377 ms</td><td class="num">—</td><td class="num ok">160-byte token</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid2" style="margin-top:2mm">
+    <div class="card hi">
+      <h3>Checking is free of group size</h3>
+      <p>An audit took <strong>692.6 ms</strong> with 1 owner and <strong>692.1 ms</strong> with 10, a <strong>0.07 %</strong> difference. The auditor genuinely cannot tell how many owners exist, so consortia can grow without slowing anyone down.</p>
+    </div>
+    <div class="card hi">
+      <h3>Checking is free of data size</h3>
+      <p>Every audit costs the same <strong>three cryptographic pairings</strong> whether the dataset is 1 KB or 100 TB, and the cloud's reply is about <strong>128 bytes</strong>. The data itself never moves.</p>
+    </div>
+  </div>
+
+  <h2>11. An original finding</h2>
+  <p>The paper estimates how likely an audit is to catch a cheating cloud, using a standard formula. We measured it over <strong>3,500 trials</strong> and found the real detection rate <strong>meets or beats the paper's figure in every configuration tested</strong>.</p>
+  <p>The reason: their formula assumes the auditor might check the same block twice; ours never does. Their recommendation is therefore <em>safe</em>, it <strong>under-promises</strong> what the system actually delivers. This is a small original contribution back to the research, and a strong point to raise with an examiner.</p>
+
+  <h2>12. Engineering quality</h2>
+  <div class="grid4" style="margin-top:1.6mm">
+    <div class="stat"><div class="n">41</div><div class="l">Automated tests, all passing</div></div>
+    <div class="stat"><div class="n">6,058</div><div class="l">Lines of documented Python</div></div>
+    <div class="stat"><div class="n">3</div><div class="l">External dependencies only</div></div>
+    <div class="stat"><div class="n">500<span style="font-size:9pt"> MB</span></div><div class="l">Sample data generated</div></div>
+  </div>
+
+  <p class="foot">Page 3 of 4 &nbsp;·&nbsp; All figures measured on a standard laptop and fully reproducible with <code>python3 -m benchmarks.run_benchmarks</code></p>
+</div>
+
+<!-- ======================= PAGE 4, DELIVERY & FUTURE ======================= -->
+<div class="page">
+
+  <h2>13. What has been delivered</h2>
+  <table>
+    <thead><tr><th style="width:26%">Folder</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr><td><code>crypto/</code></td><td><strong>The protocol itself</strong>: all six algorithms, no file/network/database code mixed in. Readable on its own.</td></tr>
+      <tr><td><code>entities/</code></td><td>The four parties as plain classes: Cloud, Auditor, Sale Group, Buy Group.</td></tr>
+      <tr><td><code>datasets/</code></td><td>Generator for five realistic sale scenarios at four size tiers (2 MB → 512 MB).</td></tr>
+      <tr><td><code>demo/</code></td><td>The narrated end-to-end walkthrough judges can watch live.</td></tr>
+      <tr><td><code>attacks/</code></td><td>Three executable attack demonstrations.</td></tr>
+      <tr><td><code>benchmarks/</code></td><td>Measurement harness plus six publication-quality result charts.</td></tr>
+      <tr><td><code>tests/</code></td><td>41 correctness tests.</td></tr>
+      <tr><td><code>report/</code></td><td>Chapters 5–7 (Implementation, Testing, Results) and all Chapter 4 diagrams.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>14. The five built-in market scenarios</h2>
+  <p>Each dataset is deliberately owned by a <strong>consortium</strong>, never one party, because that is the case existing research fails on.</p>
+  <table>
+    <thead><tr><th style="width:30%">Dataset</th><th style="width:35%">Seller</th><th>Buyer</th></tr></thead>
+    <tbody>
+      <tr><td>Medical imaging index</td><td>3 hospital groups</td><td>Medical-AI research institute</td></tr>
+      <tr><td>Smart-city telemetry</td><td>Transport dept + 2 agencies</td><td>Urban analytics company</td></tr>
+      <tr><td>Banking ledger</td><td>Bank + data custodian</td><td>Statutory audit firm</td></tr>
+      <tr><td>Genomic variants</td><td>3 sequencing labs</td><td>Pharmaceutical company</td></tr>
+      <tr><td>AI training corpus</td><td>Data-labelling vendor</td><td>Autonomous-systems AI lab</td></tr>
+    </tbody>
+  </table>
+  <p class="small" style="margin-top:-.8mm">All data is synthetic: no real patient, customer or personal record is used or reproduced.</p>
+
+  <h2>15. Honest limitations</h2>
+  <ul>
+    <li><strong>Speed is in milliseconds, not microseconds.</strong> We chose a pure-Python cryptography library so the project runs on <em>any</em> machine with no compiler; the original authors used C. This affects raw speed only, <em>not</em> the scaling behaviour being demonstrated, since both methods are measured on identical foundations. All cryptography sits in one file and can be swapped for a native version.</li>
+    <li><strong>The comparison system is a faithful re-build</strong> of the older method's cost structure as described in the paper, not the original authors' code. Its shape is accurate; its exact millisecond values are ours.</li>
+    <li><strong>No graphical interface yet.</strong> This phase delivers the engine, datasets, security proofs and measurements.</li>
+    <li><strong>Not production-hardened.</strong> A real deployment needs secure key storage, access control and formal review.</li>
+  </ul>
+
+  <h2>16. Future goals</h2>
+  <table>
+    <thead><tr><th style="width:16%">Phase</th><th style="width:38%">Goal</th><th>Why it matters</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Next</strong></td><td>Native cryptography backend</td><td>100× speed gain. One file changes; nothing else moves.</td></tr>
+      <tr><td><strong>Next</strong></td><td>Web dashboard for the four roles</td><td>Makes the system usable by non-programmers and demo-ready.</td></tr>
+      <tr><td><strong>Phase II</strong></td><td>Real cloud deployment (AWS S3 / Azure)</td><td>Proves it works against a genuine storage provider, not a simulation.</td></tr>
+      <tr><td><strong>Phase II</strong></td><td>Automatic scheduled auditing + alerts</td><td>Continuous protection instead of manual checks.</td></tr>
+      <tr><td><strong>Research</strong></td><td>Partial-dataset sale</td><td>Sell half a dataset and keep the rest: a real commercial need.</td></tr>
+      <tr><td><strong>Research</strong></td><td>Blockchain ownership history &amp; post-quantum variant</td><td>A tamper-proof public record of who owned what; and resistance to future quantum computers.</td></tr>
+      <tr><td><strong>Publication</strong></td><td>Paper on the detection-bound finding</td><td>An original, defensible contribution already measured.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>17. Why this matters commercially</h2>
+  <p>The scenarios above are real markets: <strong>hospital consortia</strong> selling imaging data to medical-AI companies, <strong>banks</strong> handing ledgers to statutory auditors, <strong>sequencing labs</strong> licensing genomic data to pharma, <strong>data vendors</strong> selling AI training sets worth millions. All share one unsolved need (proving a dataset is intact and that its ownership genuinely moved) and <strong>none has a single owner</strong>. That is the gap this project closes.</p>
+
+  <p class="foot">Page 4 of 4 &nbsp;·&nbsp; Every figure in this report was measured on a standard laptop and is fully reproducible &nbsp;·&nbsp; All sample data is synthetic</p>
+</div>
+
+</body>
+</html>

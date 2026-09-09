@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Code Walkthrough Guide, Which Folders to Show</title>
+<style>
+  @page { size: A4; margin: 11mm 12mm; }
+  :root{
+    --ink:#12161c; --ink2:#3d4654; --muted:#6b7280;
+    --line:#dfe3e9; --bg:#ffffff; --tint:#f5f7fa;
+    --blue:#2a78d6; --orange:#eb6834; --green:#0f8a5f; --red:#c8332f; --gold:#b07d10;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#e9ecf1; color:var(--ink);
+    font:8.7pt/1.33 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .page{width:210mm; height:297mm; margin:8mm auto; padding:11mm 12mm;
+    background:var(--bg); box-shadow:0 2px 18px rgba(20,30,50,.13); overflow:hidden;}
+
+  h1{font-size:15pt; line-height:1.15; margin:0 0 1.5mm; letter-spacing:-.25px;}
+  .sub{color:var(--ink2); font-size:9pt; margin:0 0 1mm;}
+  .meta{color:var(--muted); font-size:7.5pt; margin:0;}
+  h2{font-size:10pt; margin:3.2mm 0 1.5mm; padding-bottom:1mm;
+     border-bottom:1.8px solid var(--ink); letter-spacing:-.1px;}
+  h3{font-size:8.8pt; margin:0 0 1mm;}
+  p{margin:0 0 1.6mm;}
+  .rule{height:2.5px; background:var(--ink); margin:2.4mm 0 2.8mm; border:0;}
+
+  table{width:100%; border-collapse:collapse; font-size:8.1pt; margin:1.3mm 0 2.2mm;}
+  th{text-align:left; font-weight:650; font-size:7.2pt; text-transform:uppercase;
+     letter-spacing:.35px; color:var(--muted); border-bottom:1.4px solid var(--ink);
+     padding:1mm 1.4mm;}
+  td{padding:1.1mm 1.4mm; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.32;}
+  tr:last-child td{border-bottom:none;}
+  td.num{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; color:var(--muted);}
+  .small{color:var(--muted); font-size:7.4pt; display:block; margin-top:.3mm;}
+
+  .tier{border-left:4px solid var(--line); padding:2mm 0 .5mm 3mm; margin-bottom:2.4mm;}
+  .tier.t1{border-left-color:var(--gold);}
+  .tier.t2{border-left-color:var(--blue);}
+  .tier.t3{border-left-color:var(--muted);}
+  .tier h3{font-size:9.4pt; margin-bottom:.8mm;}
+  .badge{display:inline-block; font-size:6.8pt; font-weight:700; padding:.35mm 1.6mm;
+     border-radius:3px; letter-spacing:.3px; vertical-align:1px; margin-right:1.5mm;}
+  .b1{background:#fbf1d8; color:var(--gold);}
+  .b2{background:#e6f0fb; color:var(--blue);}
+  .b3{background:#eef0f3; color:var(--muted);}
+
+  code{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:8pt;
+       background:var(--tint); padding:.2mm 1mm; border-radius:2px;}
+  .path{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-weight:600; color:var(--ink);}
+
+  .quote{border-left:3px solid var(--orange); background:#fdf3ee;
+    padding:1.8mm 2.6mm; margin:1.8mm 0; font-size:8.3pt; color:var(--ink2); line-height:1.38;}
+  .quote strong{color:var(--ink);}
+
+  .warn{border-left:3px solid var(--red); background:#fdefee;
+    padding:1.8mm 2.6mm; margin:1.8mm 0; font-size:8.3pt; color:var(--ink2); line-height:1.38;}
+  .warn strong{color:var(--red);}
+
+  .runbox{background:#12161c; color:#e8eaed; border-radius:4px; padding:2.2mm 3mm;
+     font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:8pt; margin:1.6mm 0;}
+  .runbox .c{color:#7fd6a8;}
+
+  ol{margin:0 0 1.6mm; padding-left:4.5mm;}
+  ul{margin:0 0 1.6mm; padding-left:4.2mm;}
+  li{margin-bottom:.9mm; line-height:1.34;}
+
+  .foot{margin-top:2.2mm; padding-top:1.4mm; border-top:1px solid var(--line);
+        font-size:7.2pt; color:var(--muted); line-height:1.35;}
+
+  @media print{
+    body{background:#fff;}
+    .page{margin:0; padding:0; box-shadow:none; width:auto; height:auto; overflow:visible;}
+    .page + .page{page-break-before:always;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== PAGE 1 ===================== -->
+<div class="page">
+
+  <h1>Code Walkthrough Guide</h1>
+  <p class="sub">Which folders to open when presenting, which to mention, and which to leave alone.</p>
+  <p class="meta">Cloud-Based Auditing System with Efficient Ownership Management for Group Data Transactions · Dept. of ISE, Global Academy of Technology</p>
+
+  <hr class="rule">
+
+  <p>The project contains roughly 6,000 lines of Python across seven folders. Only three of them carry the story. This guide ranks every folder by how useful it is in front of an audience, so that presentation time goes to the material that earns attention.</p>
+
+  <h2>Tier 1: open these, this is the project</h2>
+
+  <div class="tier t1">
+    <h3><span class="badge b1">OPEN</span><span class="path">crypto/</span> &nbsp;the protocol itself</h3>
+    <p>If anyone asks where the research is actually implemented, this is the answer. It contains no file handling, no network code and no database code. Pure cryptography, readable on its own.</p>
+    <table>
+      <thead><tr><th style="width:24%">File</th><th class="num" style="width:11%">Lines</th><th>What to say about it</th></tr></thead>
+      <tbody>
+        <tr><td class="path">scheme.py</td><td class="num">397</td><td><strong>The single most important file.</strong> Contains SysGen, KeyGen, TagGen and Audit, four of the six algorithms.</td></tr>
+        <tr><td class="path">ownership.py</td><td class="num">354</td><td><strong>The paper's actual contribution.</strong> AddOwner, RevokeOwner and OwnerTransfer. The security trick lives here.</td></tr>
+        <tr><td class="path">hashes.py</td><td class="num">120</td><td>Short, and the place where two errors in the published paper were identified and corrected.</td></tr>
+        <tr><td class="path">pairing.py</td><td class="num">265</td><td>The mathematics engine. Worth noting it is the only file that touches the cryptography library, so the whole backend is swappable in one move.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tier t1">
+    <h3><span class="badge b1">OPEN</span><span class="path">attacks/</span> &nbsp;the strongest material in the project</h3>
+    <p>Three attacks, each run twice: once against the older published method, once against this one. Demonstrating only the defence would prove nothing, since a system that rejects everything also rejects attacks.</p>
+    <table>
+      <thead><tr><th style="width:24%">File</th><th class="num" style="width:11%">Lines</th><th>What it shows</th></tr></thead>
+      <tbody>
+        <tr><td class="path">collusion.py</td><td class="num">260</td><td><strong>Run this one live.</strong> Breaks the older method, then blocks the identical attack.</td></tr>
+        <tr><td class="path">rogue_key.py</td><td class="num">247</td><td>Faked co-ownership of a stranger's dataset, blocked.</td></tr>
+        <tr><td class="path">tampering.py</td><td class="num">253</td><td>Corruption detection, plus the 3,500-trial statistical study.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="tier t1">
+    <h3><span class="badge b1">RUN</span><span class="path">demo/run_demo.py</span> &nbsp;338 lines</h3>
+    <p>The narrated walkthrough that gets run in front of people. It plays out the full lifecycle on a real 25 MB dataset and prints the auditor's verdict at every stage.</p>
+  </div>
+
+  <h2>Tier 2: mention, open only if asked</h2>
+
+  <div class="tier t2">
+    <h3><span class="badge b2">MENTION</span><span class="path">entities/</span> &nbsp;the four parties</h3>
+    <p>Cloud Storage Provider, Third Party Auditor, Sale Group and Buy Group, written as plain classes. Useful for explaining who is trusted with what. <span class="path">csp.py</span> is the interesting one, because it deliberately includes methods to corrupt and delete blocks. That is the modelled attack surface, put there on purpose.</p>
+  </div>
+
+  <div class="tier t2">
+    <h3><span class="badge b2">MENTION</span><span class="path">tests/</span> &nbsp;542 lines</h3>
+    <p>Do not read this aloud. Simply state that there are 41 tests and all of them pass, then show the terminal output instead.</p>
+  </div>
+
+  <div class="tier t2">
+    <h3><span class="badge b2">SHOW OUTPUT</span><span class="path">benchmarks/</span></h3>
+    <p>Point at the charts rather than the code. The six result images sit in <span class="path">benchmarks/results/figures/</span>.</p>
+  </div>
+
+  <p class="foot">Page 1 of 2 · Line counts are exact as of the current build</p>
+</div>
+
+<!-- ===================== PAGE 2 ===================== -->
+<div class="page">
+
+  <h2>Tier 3: only if someone digs</h2>
+  <div class="tier t3">
+    <p style="margin-bottom:0"><span class="path">datasets/</span> generated the 500 MB of sample data. <span class="path">crypto/baseline.py</span> is the comparison system used for benchmarking. <span class="path">crypto/serialize.py</span> and <span class="path">demo/console.py</span> are utilities. All solid work, but none of it wins an argument.</p>
+  </div>
+
+  <div class="warn">
+    <strong>Do not open these in front of anyone.</strong> <span class="path">benchmarks/plots.py</span> (509 lines) and <span class="path">datasets/generate.py</span> (552 lines) are the two largest files in the project and the two least interesting. One is chart styling, the other is synthetic data generation. Opening them costs presentation time and impresses nobody.
+  </div>
+
+  <h2>If there are only 60 seconds</h2>
+  <p>Show two folders and say one line about each.</p>
+  <table>
+    <thead><tr><th style="width:26%">Folder</th><th>The line</th></tr></thead>
+    <tbody>
+      <tr><td class="path">code/crypto/</td><td>"This is the research paper, implemented."</td></tr>
+      <tr><td class="path">code/attacks/</td><td>"This is the proof that it works."</td></tr>
+    </tbody>
+  </table>
+
+  <h2>If there are five minutes, do exactly this</h2>
+  <ol>
+    <li><strong>Run it rather than describe it.</strong> The audience watches the older method break and this one hold. Considerably stronger than any slide.
+      <div class="runbox"><span class="c">$</span> python3 -m attacks.collusion</div>
+    </li>
+    <li><strong>Open <span class="path">crypto/ownership.py</span></strong> and scroll to the comment block at the top. It explains the three deliberate design decisions in plain English before any code appears.</li>
+    <li><strong>Show <span class="path">benchmarks/results/figures/fig1_keygen_scaling.png</span>.</strong> The two diverging curves make the scalability point instantly, with no explanation required.</li>
+  </ol>
+
+  <h2>Two points worth saying out loud</h2>
+
+  <div class="quote">
+    <strong>On the architecture.</strong> The dependency direction is strictly one way. <span class="path">crypto/</span> does not know that <span class="path">entities/</span> exists, and <span class="path">entities/</span> does not know that <span class="path">demo/</span> exists. That was a deliberate decision, and it is the reason the cryptography can be read on its own and found complete.
+  </div>
+
+  <div class="quote">
+    <strong>On the comments.</strong> Every file opens with an explanation of why it exists, not merely what it does, including the corrections made to the published paper. Open any file at random and the first thing read is reasoning, not code.
+  </div>
+
+  <h2>Anticipated questions, and where to point</h2>
+  <table>
+    <thead><tr><th style="width:40%">Question</th><th>Answer, and the file to open</th></tr></thead>
+    <tbody>
+      <tr><td>"Where is the actual research implemented?"</td><td><span class="path">crypto/scheme.py</span> and <span class="path">crypto/ownership.py</span></td></tr>
+      <tr><td>"How do you know it is secure?"</td><td>Run <span class="path">attacks/collusion.py</span> live</td></tr>
+      <tr><td>"How do you know it is correct?"</td><td><code>pytest tests/ -v</code>, 41 tests</td></tr>
+      <tr><td>"Did you just copy the authors' code?"</td><td>No. Written from the equations. Their repository is cited as related work in <span class="path">README.md</span>; two errors in their notation were corrected in <span class="path">crypto/hashes.py</span></td></tr>
+      <tr><td>"Why is it slower than the paper?"</td><td>A deliberate choice of pure-Python so it runs anywhere without a compiler. Affects raw speed only, not the scaling result. See <span class="path">README.md</span></td></tr>
+      <tr><td>"Is the sample data real?"</td><td>No, entirely synthetic. No real patient, customer or personal record is used. See <span class="path">datasets/generate.py</span></td></tr>
+    </tbody>
+  </table>
+
+  <p class="foot">Page 2 of 2 · Prepared as a presentation aid, not part of the submitted report</p>
+</div>
+
+</body>
+</html>

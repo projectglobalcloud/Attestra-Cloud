@@ -1,0 +1,83 @@
+{% extends "base_console.html" %}
+{% block title %}Activity Trail{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Activity Trail</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Activity Trail</h1>
+    <p class="page-sub">A complete, timestamped record of every operation performed in this
+      account — onboarding, verifications, membership changes, transfers, security
+      validations and sign-ins.</p>
+  </div>
+</div>
+
+<section class="card" data-table data-page-size="20">
+  <div class="tbl-toolbar">
+    <div class="tbl-search">
+      <svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5 18 18"/></svg>
+      <input type="text" data-table-search placeholder="Filter events">
+    </div>
+    <select onchange="location.href='{{ url_for('console.activity') }}' + (this.value ? '?kind=' + this.value : '')">
+      <option value="">All event types</option>
+      {% for k in kinds %}
+      <option value="{{ k }}" {{ 'selected' if k == kind }}>{{ {
+        'onboard': 'Dataset protected', 'audit': 'Verification',
+        'add_owner': 'Member admitted', 'revoke_owner': 'Member removed',
+        'transfer': 'Ownership transfer', 'corrupt': 'Fault injected',
+        'restore': 'Storage restored', 'attack': 'Security validation',
+        'signup': 'Account created', 'schedule': 'Schedule changed',
+      }.get(k, k|capitalize) }}</option>
+      {% endfor %}
+    </select>
+    <div class="spacer"></div>
+    <button class="icon-btn" data-refresh title="Refresh">
+      <svg viewBox="0 0 20 20"><path d="M16.5 8A7 7 0 1 0 17 11"/><path d="M17 4v4h-4"/></svg>
+    </button>
+  </div>
+  <div class="card-body flush">
+    {% if events %}
+    <table class="table">
+      <thead><tr><th class="shrink">Time (UTC)</th><th class="shrink">Event type</th>
+        <th class="shrink">Resource</th><th>Description</th></tr></thead>
+      <tbody>
+        {% for e in events %}
+        <tr>
+          <td class="muted shrink">{{ e.created_at.strftime("%d %b %Y, %H:%M:%S") }}</td>
+          <td class="shrink"><span class="chip chip-plain">{{ {
+            'onboard': 'Dataset protected', 'audit': 'Verification',
+            'add_owner': 'Member admitted', 'revoke_owner': 'Member removed',
+            'transfer': 'Ownership transfer', 'corrupt': 'Fault injected',
+            'restore': 'Storage restored', 'attack': 'Security validation',
+            'signup': 'Account created', 'schedule': 'Schedule changed',
+          }.get(e.kind, e.kind|capitalize) }}</span></td>
+          <td class="shrink">{% if e.dataset_id in names %}
+            <a class="link" href="{{ url_for('console.storage_detail', dataset_id=e.dataset_id) }}">{{ names[e.dataset_id].name }}</a>
+            {% else %}<span class="muted">account</span>{% endif %}</td>
+          <td>{{ e.summary }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      <p>No events recorded {% if kind %}for this event type{% else %}yet{% endif %}.</p>
+    </div>
+    {% endif %}
+  </div>
+  {% if events %}
+  <div class="tbl-foot">
+    <span>Total: <b data-table-total>{{ events|length }}</b> item(s)</span>
+    <div class="spacer"></div>
+    <select data-table-size>
+      <option value="20" selected>20 / page</option>
+      <option value="50">50 / page</option>
+      <option value="100">100 / page</option>
+    </select>
+    <div class="pager" data-table-pager></div>
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}

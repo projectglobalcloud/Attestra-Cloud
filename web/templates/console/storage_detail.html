@@ -1,0 +1,387 @@
+{% extends "base_console.html" %}
+{% block title %}{{ dataset.name }}{% endblock %}
+{% block crumbs %}
+<span class="sep">/</span><a href="{{ url_for('console.storage') }}">Storage</a>
+<span class="sep">/</span><span class="here">{{ dataset.name }}</span>
+{% endblock %}
+{% block content %}
+{% macro contents_card() %}
+<section class="card">
+  <div class="card-head sect-head-row">
+    <div><h2>What is inside this dataset</h2>
+      <p class="sub">Read from the file as it is stored on this server. Verification never
+        needs to see the data — but you hold it, so you can.</p></div>
+    <a class="btn btn-ghost btn-sm"
+       href="{{ url_for('api.dataset_file', dataset_id=dataset.id) }}?download=1">Download the file</a>
+  </div>
+  <div class="card-body" id="contents-body">
+    <p class="muted" id="contents-loading">Reading the file…</p>
+  </div>
+</section>
+{% endmacro %}
+
+
+<div class="resource-head">
+  <div>
+    <div class="resource-title">
+      <span class="resource-icon">
+        <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+      </span>
+      <div>
+        <h1>{{ dataset.name }}</h1>
+        <span class="copy-id muted mono" style="font-size:11px">{{ dataset.file_id }}
+          <button data-copy="{{ dataset.file_id }}" title="Copy resource ID">
+            <svg viewBox="0 0 20 20"><rect x="7" y="7" width="9" height="10" rx="1.5"/><path d="M13 7V5a1.5 1.5 0 0 0-1.5-1.5H5.5A1.5 1.5 0 0 0 4 5v8a1.5 1.5 0 0 0 1.5 1.5H7"/></svg>
+          </button></span>
+      </div>
+      {% if dataset.status == 'active' %}<span class="st st-ok">Protected</span>
+      {% elif dataset.status == 'stale' %}<span class="st st-warn">Needs re-protection</span>
+      {% elif dataset.status == 'stored' %}<span class="st st-info">Stored, not protected</span>
+      {% else %}<span class="st st-info">{{ dataset.status|capitalize }}</span>{% endif %}
+    </div>
+    <dl class="resource-meta">
+      <div><dt>Dataset ID</dt><dd class="mono">{{ dataset.dataset_ref }}</dd></div>
+      <div><dt>Region</dt><dd>{{ region_names.get(dataset.region, dataset.region) }} ({{ dataset.region }})</dd></div>
+      <div><dt>Held by</dt><dd>{{ holder.display_name if holder else "Not assigned" }}</dd></div>
+      <div><dt>Source</dt><dd>{% if dataset.is_upload %}Uploaded file{% else %}Consortium catalog{% endif %}</dd></div>
+      <div><dt>Ownership group</dt><dd>{{ live.group_name if live else dataset.group_name }}</dd></div>
+      <div><dt>Members</dt><dd>{{ (live.owners if live else dataset.owners)|length }}</dd></div>
+      <div><dt>Protected blocks</dt><dd>{{ live.n_blocks if live else dataset.n_blocks }}</dd></div>
+      <div><dt>Block size</dt><dd>{{ (dataset.block_size / 1024)|int }} KB</dd></div>
+      <div><dt>Verifications</dt><dd>{{ n_pass }}/{{ n_audits }} passed</dd></div>
+      <div><dt>Monitoring</dt><dd>{% if dataset.audit_every_min %}Every {{ dataset.audit_every_min }} min{% else %}Off{% endif %}</dd></div>
+      <div><dt>Protected since</dt><dd>{{ dataset.created_at.strftime("%d %b %Y") }}</dd></div>
+    </dl>
+  </div>
+  <a class="btn btn-ghost" href="{{ url_for('console.storage') }}">All storage</a>
+</div>
+
+{% if dataset.status == 'stored' %}
+<section class="card">
+  <div class="card-head"><div><h2>Held on this server, not yet protected</h2>
+    <p class="sub">The file is stored locally. Protecting it issues the owners' keys and
+      seals every block, after which it can be verified and its ownership transferred.</p></div></div>
+  <div class="card-body">
+    <dl class="resource-meta" style="margin-top:0">
+      <div><dt>Original file</dt><dd>{{ dataset.original_filename }}</dd></div>
+      <div><dt>Size</dt><dd>{{ "%.2f MB"|format(dataset.total_bytes / 1048576) }}</dd></div>
+      <div><dt>Uploaded</dt><dd>{{ dataset.created_at.strftime("%d %b %Y, %H:%M") }}</dd></div>
+      <div><dt>Named key holders</dt><dd>{{ dataset.owners|join(", ") or "none yet" }}</dd></div>
+    </dl>
+    <p class="field-note mono" style="word-break:break-all">SHA-256 {{ dataset.content_sha256 }}</p>
+    <p class="field-note">Recorded when the bytes arrived. Protection binds the tags to this
+      exact content, so a file swapped afterwards cannot pass verification.</p>
+    <button class="btn btn-primary" id="protect-now" style="margin-top:12px">Protect this dataset</button>
+  </div>
+</section>
+
+{{ contents_card() }}
+{% elif dataset.status != 'active' or not live %}
+<div class="card"><div class="card-body">
+  <div class="empty">
+    <p>This dataset's protection keys were rotated out when the service restarted
+       (keys are held in secure memory only, never on disk).</p>
+    {% if dataset.is_upload %}
+    <p class="muted">The uploaded file is still held on this server — protecting it again
+      re-seals the same bytes.</p>
+    <button class="btn btn-primary" id="protect-now">Protect it again</button>
+    {% else %}
+    <a class="btn btn-primary" href="{{ url_for('console.storage') }}">Protect it again from the catalog</a>
+    {% endif %}
+  </div>
+</div></div>
+
+{{ contents_card() }}
+{% else %}
+
+<div class="tabs" data-tabs="#detail-panes">
+  <button class="tab active" data-pane="#tab-overview">Overview</button>
+  <button class="tab" data-pane="#tab-contents">Contents</button>
+  <button class="tab" data-pane="#tab-integrity">Integrity</button>
+  <button class="tab" data-pane="#tab-ownership">Ownership</button>
+  <button class="tab" data-pane="#tab-activity">Activity</button>
+</div>
+
+<div id="detail-panes">
+
+  <!-- ========================== OVERVIEW ========================== -->
+  <div class="tabpane active" id="tab-overview">
+    <div class="stat-row">
+      <div class="stat">
+        <span class="stat-label">Storage health</span>
+        <span class="stat-value sm">
+          {% if live.corrupted %}<span class="st st-err">{{ live.corrupted|length }} block(s) altered</span>
+          {% else %}<span class="st st-ok">Healthy</span>{% endif %}
+        </span>
+        <span class="stat-foot">{% if live.corrupted %}indices {{ live.corrupted|join(", ") }}{% else %}no unresolved storage alterations{% endif %}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Verification success</span>
+        <span class="stat-value">{{ "%.0f%%"|format(100 * n_pass / n_audits) if n_audits else "—" }}</span>
+        <span class="stat-foot">{{ n_audits }} verification{{ 's' if n_audits != 1 }} to date</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Continuous verification</span>
+        <span class="stat-value sm">
+          {% if dataset.audit_every_min %}<span class="st st-ok">Every {{ dataset.audit_every_min }} min</span>
+          {% else %}<span class="st st-mut">Off</span>{% endif %}
+        </span>
+        <span class="stat-foot">
+          {% if dataset.audit_every_min and next_run_s is not none %}next run in about {{ (next_run_s // 60)|int }} min {{ next_run_s % 60 }} s
+          {% else %}enable it on the Integrity tab{% endif %}
+        </span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Custody</span>
+        <span class="stat-value sm">{{ live.previous_group or "Original owners" }}</span>
+        <span class="stat-foot">{% if live.has_stale %}previous owner — access provably revoked{% else %}no transfer has occurred{% endif %}</span>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head"><h2>Ownership group</h2></div>
+        <div class="card-body">
+          <p class="muted" style="margin-bottom:10px">Every member organization holds an
+            independent signing key. No single member can move or misrepresent the data alone.</p>
+          {% for o in live.owners %}
+            <span class="chip" style="margin:0 6px 6px 0">{{ o }}</span>
+          {% endfor %}
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>Latest verifications</h2></div>
+        <div class="card-body flush">
+          {% if audits %}
+          <table class="table">
+            <thead><tr><th>Time</th><th class="num">Coverage</th><th class="num">Latency</th><th>Result</th></tr></thead>
+            <tbody>
+              {% for a in audits[:5] %}
+              <tr>
+                <td class="muted">{{ a.created_at.strftime("%d %b, %H:%M") }}{% if a.note %} <span class="muted">({{ a.note }})</span>{% endif %}</td>
+                <td class="num">{{ a.challenged }}/{{ a.total_blocks }}</td>
+                <td class="num">{{ "%.0f ms"|format(a.duration_ms) }}</td>
+                <td><span class="st st-{{ 'ok' if a.passed else 'err' }}">{{ "Passed" if a.passed else "Failed" }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}<div class="empty"><p>Not verified yet — run one from the Integrity tab.</p></div>{% endif %}
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ========================== CONTENTS ========================== -->
+  <div class="tabpane" id="tab-contents">
+    {{ contents_card() }}
+  </div>
+
+  <!-- ========================== INTEGRITY ========================= -->
+  <div class="tabpane" id="tab-integrity">
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head"><div><h2>Run a verification</h2>
+          <p class="sub">Challenge the storage provider to prove it holds this data</p></div></div>
+        <div class="card-body">
+          <form data-action="audit">
+            <div class="form-row">
+              <label>Blocks to challenge
+                <input type="number" name="c" value="10" min="1" max="{{ live.n_blocks }}">
+              </label>
+              {% if live.has_stale %}
+              <label class="check" style="padding-bottom:8px">
+                <input type="checkbox" name="stale"> Verify as the previous owner
+              </label>
+              {% endif %}
+            </div>
+            <p class="field-note" style="margin:8px 0 12px">Challenging more blocks raises
+              detection confidence; the proof returned by the provider stays the same size
+              either way.{% if live.has_stale %} Verifying as the previous owner demonstrates
+              that a completed transfer revokes their access — it should fail.{% endif %}</p>
+            <button class="btn btn-primary" type="submit">Verify now</button>
+          </form>
+          <div id="audit-result"></div>
+        </div>
+      </section>
+
+      <div>
+        <section class="card">
+          <div class="card-head"><div><h2>Continuous verification</h2>
+            <p class="sub">Verify this dataset automatically on a schedule</p></div>
+            <label class="switch"><input type="checkbox" id="sched-toggle"
+              {{ 'checked' if dataset.audit_every_min }}><i></i></label>
+          </div>
+          <div class="card-body">
+            <div class="form-row">
+              <label>Interval
+                <select id="sched-interval">
+                  {% for m in [1, 2, 5, 10, 15, 30, 60] %}
+                  <option value="{{ m }}" {{ 'selected' if dataset.audit_every_min == m or (not dataset.audit_every_min and m == 5) }}>Every {{ m }} minute{{ 's' if m != 1 }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+            </div>
+            <p class="field-note">Scheduled results appear in the verification history and the
+              Monitor dashboards, exactly like manual runs.
+              {% if dataset.audit_every_min and next_run_s is not none %}
+              Next run in about {{ (next_run_s // 60)|int }} min {{ next_run_s % 60 }} s.{% endif %}</p>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><div><h2>Storage fault simulation</h2>
+            <p class="sub">Demonstrate detection by injecting a fault at the storage layer</p></div></div>
+          <div class="card-body">
+            <form data-action="corrupt" class="form-row" style="margin-bottom:10px">
+              <label>Block index
+                <input type="number" name="index" value="0" min="0" max="{{ live.n_blocks - 1 }}">
+              </label>
+              <button class="btn btn-danger" type="submit">Alter block</button>
+            </form>
+            <form data-action="restore">
+              <button class="btn btn-ghost" type="submit">Restore all altered blocks</button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <section class="card" data-table data-page-size="10">
+      <div class="card-head"><h2>Verification history</h2></div>
+      <div class="card-body flush">
+        {% if audits %}
+        <table class="table">
+          <thead><tr><th>Time</th><th class="num">Coverage</th><th class="num">Confidence</th><th class="num">Latency</th><th>Result</th></tr></thead>
+          <tbody>
+            {% for a in audits %}
+            <tr>
+              <td class="muted">{{ a.created_at.strftime("%d %b %Y, %H:%M") }}{% if a.note %} <span class="muted">({{ a.note }})</span>{% endif %}</td>
+              <td class="num">{{ a.challenged }}/{{ a.total_blocks }} blocks</td>
+              <td class="num">{{ "%.1f%%"|format(a.detection_pct) }}</td>
+              <td class="num">{{ "%.0f ms"|format(a.duration_ms) }}</td>
+              <td><span class="st st-{{ 'ok' if a.passed else 'err' }}">{{ "Passed" if a.passed else "Failed" }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}<div class="empty"><p>No verifications yet.</p></div>{% endif %}
+      </div>
+      {% if audits %}
+      <div class="tbl-foot">
+        <span>Total: <b data-table-total>{{ audits|length }}</b> item(s)</span>
+        <div class="spacer"></div>
+        <div class="pager" data-table-pager></div>
+      </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <!-- ========================== OWNERSHIP ========================= -->
+  <div class="tabpane" id="tab-ownership">
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-head"><div><h2>Membership</h2>
+          <p class="sub">Admit or remove member organizations</p></div></div>
+        <div class="card-body form-stack">
+          <form data-action="owners/add">
+            <label>Admit organizations <span class="hint">(comma-separated)</span></label>
+            <div class="form-row">
+              <input type="text" name="owners" placeholder="fortis-hospital" style="margin-top:5px">
+              <button class="btn btn-primary" type="submit">Admit</button>
+            </div>
+            <p class="field-note">Existing members are not re-keyed and do not need to be online.</p>
+          </form>
+          <form data-action="owners/revoke">
+            <label>Remove organizations</label>
+            <div class="form-row">
+              <input type="text" name="owners" placeholder="{{ live.owners[-1] }}" style="margin-top:5px">
+              <button class="btn btn-danger" type="submit">Remove</button>
+            </div>
+            <p class="field-note">Removed members immediately and permanently lose the ability
+              to act for the group.</p>
+          </form>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div><h2>Transfer ownership</h2>
+          <p class="sub">Hand this dataset to an acquiring organization</p></div></div>
+        <div class="card-body">
+          <p class="muted" style="margin-bottom:12px">The acquiring group gains verification
+            rights; the current group provably loses them. The data itself never moves.</p>
+          <form data-action="transfer" class="form-stack">
+            <label>Acquiring group
+              <input type="text" name="buyer_group" value="{{ suggested_buyer }}">
+            </label>
+            <label>Member organizations <span class="hint">(comma-separated)</span>
+              <input type="text" name="buyer_owners" value="{{ suggested_buyer_owners }}">
+            </label>
+            <div><button class="btn btn-primary" type="submit">Execute transfer</button></div>
+          </form>
+        </div>
+      </section>
+    </div>
+
+    {% if live.has_stale %}
+    <section class="card">
+      <div class="card-head"><h2>Previous custody</h2></div>
+      <div class="card-body">
+        <p class="muted">This dataset was previously held by
+          <strong>{{ live.previous_group }}</strong>. Their verification credentials remain on
+          file for demonstration: run a verification from the Integrity tab with
+          “Verify as the previous owner” to confirm their access is revoked.</p>
+      </div>
+    </section>
+    {% endif %}
+  </div>
+
+  <!-- ========================== ACTIVITY ========================== -->
+  <div class="tabpane" id="tab-activity">
+    <section class="card">
+      <div class="card-head"><h2>Resource activity</h2>
+        <a class="more" href="{{ url_for('console.activity') }}">Full Activity Trail</a></div>
+      <div class="card-body flush">
+        {% if events %}
+        <ul class="feed">
+          {% for e in events %}
+          <li>
+            {% if e.kind == 'audit' %}
+              <span class="feed-icon {{ 'err' if 'FAIL' in e.summary else 'ok' }}"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-9"/></svg></span>
+            {% elif e.kind in ['corrupt', 'revoke_owner'] %}
+              <span class="feed-icon err"><svg viewBox="0 0 20 20"><path d="M10 4v7M10 14.5v.5"/></svg></span>
+            {% elif e.kind == 'transfer' %}
+              <span class="feed-icon info"><svg viewBox="0 0 20 20"><path d="M4 7h11M12 4l3 3-3 3M16 13H5M8 10l-3 3 3 3"/></svg></span>
+            {% else %}
+              <span class="feed-icon ok"><svg viewBox="0 0 20 20"><path d="M10 3v14M3 10h14"/></svg></span>
+            {% endif %}
+            <div><p>{{ e.summary }}</p>
+              <small>{{ e.created_at.strftime("%d %b %Y, %H:%M UTC") }}</small></div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<div class="empty"><p>No activity yet.</p></div>{% endif %}
+      </div>
+    </section>
+  </div>
+
+</div>
+
+{% endif %}
+
+{% endblock %}
+{% block scripts %}
+<script>
+  StorageDetailPage.init({{ dataset.id }});
+  DatasetContents.init({{ dataset.id }});
+  {% if dataset.is_upload and dataset.status != 'active' %}
+  StoragePage.init({ regions: {{ regions|tojson }}, currentRegion: {{ current_region|tojson }}, parties: [] });
+  document.getElementById("protect-now").addEventListener("click", () =>
+    StoragePage.openProtect({{ dataset.id }}, {
+      name: {{ dataset.name|tojson }},
+      owners: {{ dataset.owners|join(', ')|tojson }},
+      blockSize: {{ dataset.block_size|string|tojson }},
+    }));
+  {% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends "base_public.html" %}
+{% block title %}Dataset Marketplace — Attestra{% endblock %}
+{% block content %}
+
+<section class="hero hero-market">
+  <div class="shell hero-inner">
+    <div>
+      <h1>Buy a dataset and actually <span class="hl-accent">own it</span></h1>
+      <p class="hero-sub">Every sale on this marketplace transfers ownership cryptographically
+        and issues a certificate. The seller's credentials stop working the moment the deal
+        closes, and the buyer gets a document that anyone can verify — no copy is emailed, no
+        claim is left resting on a handshake.</p>
+      <div class="hero-actions">
+        <a class="btn btn-accent btn-lg" href="#listings">Browse listings &rarr;</a>
+        <a class="btn btn-line btn-lg" href="{{ url_for('market.verify') }}">Verify a certificate</a>
+      </div>
+      <p class="hero-note">{{ total_live }} live listing(s) · {{ total_sold }} completed sale(s)
+        · {{ certificates_issued }} certificate(s) issued</p>
+    </div>
+  </div>
+</section>
+
+<div class="quick-strip">
+  <div class="shell">
+    <span>Ownership moves in place — the storage layer re-seals blocks, so nothing is shipped to the buyer</span>
+    &rarr;
+  </div>
+</div>
+
+<section class="section" id="listings">
+  <div class="shell">
+    <div class="section-head-row">
+      <div class="section-head">
+        <h2>Datasets on the market</h2>
+        <p>Each listing names the party that holds it today and the chain of custody behind it.</p>
+      </div>
+    </div>
+
+    <form class="offer-toolbar" method="get" action="{{ url_for('market.marketplace') }}">
+      <div class="offer-search">
+        <svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5 18 18"/></svg>
+        <input type="text" name="q" value="{{ q }}" placeholder="Search datasets, sellers or domains">
+      </div>
+      <div class="pill-tabs">
+        <a class="pill {{ 'active' if category == 'all' }}"
+           href="{{ url_for('market.marketplace', q=q) }}">All categories</a>
+        {% for c in categories %}
+        <a class="pill {{ 'active' if category == c }}"
+           href="{{ url_for('market.marketplace', category=c, q=q) }}">{{ c }}</a>
+        {% endfor %}
+      </div>
+    </form>
+
+    {% if listings %}
+    <div class="offer-grid">
+      {% for l in listings %}
+      <a class="offer-card" href="{{ url_for('market.listing_detail', listing_id=l.id) }}">
+        <span class="pd-cat">{{ l.category }}</span>
+        <span class="t">{{ l.title }}</span>
+        <span class="d">{{ l.summary|truncate(120) }}</span>
+        <div class="mk-meta">
+          <span><b>Held by</b>{{ l.seller.display_name }}</span>
+          <span><b>Type</b>{{ l.seller.type_label }}</span>
+          <span><b>Region</b>{{ l.dataset.region }}</span>
+          <span><b>Blocks</b>{{ l.dataset.n_blocks }}</span>
+        </div>
+        <div class="offer-line">
+          <span class="mk-price">{{ l.price_display }}</span>
+          {% if l.status == 'under_offer' %}<span class="mk-flag">Under offer</span>{% endif %}
+          <span class="arr">&rarr;</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="mk-empty">
+      <h3>Nothing matches that search</h3>
+      <p>Try a different term, or <a class="link-accent" href="{{ url_for('market.marketplace') }}">clear the filters</a>.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section section-warm">
+  <div class="shell">
+    <div class="section-head">
+      <h2>What changes hands, and what does not</h2>
+      <p>The difference between selling a dataset here and sending one over.</p>
+    </div>
+    <div class="cmp-grid">
+      <div class="cmp-col cmp-bad">
+        <span class="cmp-tag">Sending a copy</span>
+        <ul>
+          <li>The buyer receives a copy; the seller keeps one too</li>
+          <li>Nothing records that the sale happened</li>
+          <li>Either side can later deny the terms</li>
+          <li>A dispute comes down to emails and invoices</li>
+          <li>The seller can sell the same data again tomorrow</li>
+        </ul>
+      </div>
+      <div class="cmp-col cmp-good">
+        <span class="cmp-tag">Transferring ownership here</span>
+        <ul>
+          <li>Ownership moves at the storage layer; no copy is shipped</li>
+          <li>Both parties sign before anything moves</li>
+          <li>A certificate is issued naming both parties and the price</li>
+          <li>The seller's credentials provably stop verifying</li>
+          <li>Anyone can check the certificate without an account</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head"><h2>How a sale completes</h2>
+      <p>Four steps, in the order a registrar would run them.</p></div>
+    <div class="steps-grid">
+      <div class="step-card"><span class="step-ribbon">Step 1</span>
+        <h3>Terms are raised</h3>
+        <p>The buyer accepts a listing. An agreement records the asset, the price, the payment
+          reference and any conditions.</p></div>
+      <div class="step-card"><span class="step-ribbon">Step 2</span>
+        <h3>The seller signs</h3>
+        <p>The current holder signs the terms. Ownership has not moved yet — it stays where it
+          is until the buyer countersigns.</p></div>
+      <div class="step-card"><span class="step-ribbon">Step 3</span>
+        <h3>The buyer countersigns</h3>
+        <p>Only now does the protocol run: the seller's authority is cancelled, the buyer's is
+          written in, and the storage provider re-seals every block.</p></div>
+      <div class="step-card"><span class="step-ribbon">Step 4</span>
+        <h3>A certificate is issued</h3>
+        <p>The deed records both signatures, the price, and proof that the buyer can verify the
+          data while the seller no longer can.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="pre-footer">
+  <div class="shell pre-footer-inner">
+    <div>
+      <h2>Holding a certificate you want to check?</h2>
+      <p>Verification is open to anyone — buyers, auditors, insurers and courts included.</p>
+    </div>
+    <a class="btn btn-white btn-lg" href="{{ url_for('market.verify') }}">Verify a certificate</a>
+  </div>
+</section>
+{% endblock %}

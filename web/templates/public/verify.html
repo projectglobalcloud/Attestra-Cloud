@@ -1,0 +1,157 @@
+{% extends "base_public.html" %}
+{% block title %}Verify a Certificate — Attestra{% endblock %}
+{% block content %}
+
+<section class="vf-hero">
+  <div class="shell">
+    <span class="vf-eyebrow">Public register</span>
+    <h1>Verify a certificate of <span class="hl-accent">ownership transfer</span></h1>
+    <p class="hero-sub">Enter a certificate number to check it against the registry's published
+      signing key. This page is open to anyone — no account, no sign-in. {{ issued }}
+      certificate(s) have been issued to date.</p>
+
+    <form class="vf-form" method="post" action="{{ url_for('market.verify') }}">
+      <input type="text" name="certificate_id" value="{{ reference }}"
+             placeholder="ATX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" required>
+      <button class="btn btn-accent btn-lg" type="submit">Verify</button>
+    </form>
+    <p class="vf-note">The certificate number is printed at the top right of the document.</p>
+  </div>
+</section>
+
+{% if not_found %}
+<section class="section">
+  <div class="shell">
+    <div class="vf-result vf-unknown">
+      <h2>No certificate with that number</h2>
+      <p><b class="mono">{{ reference }}</b> does not appear on this register. Check the
+        number for transcription errors — certificate numbers never contain the letters
+        I or O, or the digits 0 or 1.</p>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if report %}
+<section class="section">
+  <div class="shell">
+    <div class="vf-result {{ 'vf-valid' if report.valid else 'vf-invalid' }}">
+      <div class="vf-verdict">
+        <span class="vf-badge"></span>
+        <div>
+          <h2>{{ "This certificate is valid" if report.valid else "This certificate did not verify" }}</h2>
+          <p>{% if report.valid %}All {{ report.checks|length }} checks pass against the
+             registry's published key. The transfer it records genuinely took place.
+             {% else %}One or more checks failed. Do not rely on this document without
+             contacting the registry.{% endif %}</p>
+        </div>
+      </div>
+      <a class="btn btn-white" href="{{ url_for('market.certificate_document', certificate_id=cert.certificate_id) }}">Open the full deed</a>
+    </div>
+
+    {% set p = report.payload %}
+    <div class="vf-summary">
+      <div class="vf-cell">
+        <span class="lbl">Certificate</span>
+        <span class="val mono">{{ cert.certificate_id }}</span>
+      </div>
+      <div class="vf-cell">
+        <span class="lbl">Asset</span>
+        <span class="val">{{ p.asset.name }}</span>
+      </div>
+      <div class="vf-cell">
+        <span class="lbl">Transferred from</span>
+        <span class="val">{{ p.parties.transferor.legal_name }}</span>
+      </div>
+      <div class="vf-cell">
+        <span class="lbl">Transferred to</span>
+        <span class="val">{{ p.parties.transferee.legal_name }}</span>
+      </div>
+      <div class="vf-cell">
+        <span class="lbl">Consideration</span>
+        <span class="val">{{ p.consideration.currency }} {{ "{:,.2f}".format(p.consideration.amount) }}</span>
+      </div>
+      <div class="vf-cell">
+        <span class="lbl">Executed</span>
+        <span class="val">{{ p.instrument.executed_at[:10] }}</span>
+      </div>
+    </div>
+
+    <div class="section-head" style="margin-top:52px">
+      <h2>Every check, and what it establishes</h2>
+      <p>Recomputed from the signed document at the moment you loaded this page.</p>
+    </div>
+    <ol class="vf-checks">
+      {% for c in report.checks %}
+      <li class="{{ 'pass' if c.passed else 'fail' }}">
+        <span class="vf-mark"></span>
+        <div><strong>{{ c.label }}</strong><span>{{ c.detail }}</span></div>
+      </li>
+      {% endfor %}
+    </ol>
+
+    {% if chain %}
+    <div class="section-head" style="margin-top:52px">
+      <h2>Chain of custody for this asset</h2>
+      <p>Every recorded ownership event, oldest first.</p>
+    </div>
+    <ol class="custody">
+      {% for c in chain %}
+      <li>
+        <span class="cu-dot"></span>
+        <div class="cu-body">
+          <span class="cu-when">{{ c.created_at.strftime("%d %b %Y, %H:%M") }}</span>
+          <strong>{{ c.detail }}</strong>
+          {% if c.from_party and c.to_party %}
+          <span class="cu-move"><span class="cu-from">{{ c.from_party }}</span> &rarr; {{ c.to_party }}</span>
+          {% elif c.to_party %}
+          <span class="cu-move">Held by {{ c.to_party }}</span>
+          {% endif %}
+          {% if c.certificate_id %}
+          <a class="link-accent mono" href="{{ url_for('market.certificate_document', certificate_id=c.certificate_id) }}">{{ c.certificate_id }}</a>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+{% if not report and not not_found %}
+<section class="section section-warm">
+  <div class="shell">
+    <div class="section-head">
+      <h2>What this page settles</h2>
+      <p>The dispute this register exists to prevent, and how a certificate ends it.</p>
+    </div>
+    <div class="vf-story">
+      <div class="vf-story-col">
+        <span class="vf-story-tag">The problem</span>
+        <p>A hospital sells an imaging archive to an AI company. Months later it says the sale
+          never happened, or that it was never paid. Both sides hold copies of the data and a
+          folder of email. Nothing on the internet records who owns a dataset, so the argument
+          has no factual floor.</p>
+      </div>
+      <div class="vf-story-col">
+        <span class="vf-story-tag">What a certificate shows</span>
+        <p>The deed names both parties as legal entities, records the price and payment
+          reference, and carries both signatures applied before anything moved. It also carries
+          the finding that settles the matter: at the moment of sale, the seller's own
+          credentials stopped verifying the dataset. A seller denying the sale has to explain
+          that record.</p>
+      </div>
+    </div>
+    <div class="vf-limits">
+      <h3>What it does not claim</h3>
+      <p>This register attests to what the protocol observed and to what each party signed. It
+        records identity to the standard shown on the certificate, and payment by reference
+        rather than by settling funds itself. It does not adjudicate who held title before the
+        transfer it records — in the same way a domain registrar produces authoritative records
+        without deciding trademark disputes.</p>
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

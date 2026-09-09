@@ -1,0 +1,94 @@
+{% extends "base_public.html" %}
+{% block title %}Company — Attestra{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="shell">
+    <div class="hero-inner" style="padding:64px 0 56px">
+      <h1>Data deserves the custody standards of <span class="hl-accent">money</span></h1>
+      <p class="hero-sub">Attestra exists because valuable datasets now spend their
+        lives in infrastructure their owners don't control — and increasingly, they
+        change hands. We build the verification layer that makes both facts safe.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <h2>Trust is a measurement, not a feeling</h2>
+      <p class="sub">Storage contracts promise durability; only verification
+        demonstrates it. Ownership records assert custody; only cryptography enforces
+        it. Everything we ship converts an assumption into a check that either passes
+        or fails — visibly, repeatably, in front of the customer.</p>
+    </div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <span class="cat">Principle 01</span>
+        <span class="big">Claims ship as code</span>
+        <p class="d">Every security property has an executable validation in the
+          product. If we can't demonstrate it live, we don't claim it.</p>
+      </div>
+      <div class="metric-card">
+        <span class="cat">Principle 02</span>
+        <span class="big">Numbers are measured</span>
+        <p class="d">Performance figures come from the deployment you're using —
+          charted at view time, never pasted from a datasheet.</p>
+      </div>
+      <div class="metric-card">
+        <span class="cat">Principle 03</span>
+        <span class="big">Custody leaves a trail</span>
+        <p class="d">Every protection, verification, membership change and transfer
+          is logged with its outcome. Evidence, not anecdotes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-2" id="research">
+  <div class="shell">
+    <div class="section-head">
+      <h2>Research foundation</h2>
+      <p class="sub">
+        The Attestra verification engine implements the group-transaction auditing
+        scheme of Wu, You &amp; Huang, published in the <em>IEEE Transactions on
+        Information Forensics and Security</em> (vol. 20, 2025) — independently
+        implemented from the published design, ported to the modern BLS12-381 curve,
+        and validated end to end on commodity hardware.
+      </p>
+    </div>
+    <div class="plain-grid">
+      <div class="plain-item"><span class="t">Independent implementation</span>
+        <span class="d">Written from the published specification, with the verification
+        equation re-derived before a line of code, then pinned by a 41-case suite.</span></div>
+      <div class="plain-item"><span class="t">Original findings</span>
+        <span class="d">Implementation surfaced two notational inconsistencies in the
+        published scheme and showed its detection bound is conservative in every
+        measured configuration.</span></div>
+      <div class="plain-item"><span class="t">Reproduced results</span>
+        <span class="d">The published performance claims — including the headline scaling
+        advantage — reproduce on commodity hardware, with the data to show it.</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head">
+      <h2>An engineering-led team</h2>
+      <p class="sub">
+        Attestra is developed as the Major Project of a four-member engineering team —
+        Sanjay G P, Shashank Gowda T K, Srujangouda Malipatil and Yashwanth Gowda D K —
+        in the Department of Information Science &amp; Engineering, Global Academy of
+        Technology. The platform doubles as the team's demonstration environment:
+        everything on this site runs the real protocol, live.
+      </p>
+    </div>
+    <div class="hero-actions">
+      <a class="btn btn-blue" href="{{ url_for('auth.signup') }}">See the work <span class="arr">→</span></a>
+      <a class="btn btn-line" href="{{ url_for('public.contact') }}">Get in touch</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

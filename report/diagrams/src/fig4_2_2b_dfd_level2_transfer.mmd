@@ -1,0 +1,14 @@
+flowchart LR
+    SG(["Sale Group"])
+    BG(["Buy Group"])
+    CSP(["CSP"])
+
+    P51["<b>5.1</b><br/>SG cancels its exponents<br/>h_i = −H₂(sk_i‖a_i)<br/>aux_i = −sk_i·H₁(pk_i) − x_i"]
+    P52["<b>5.2</b><br/>Aggregate ODT_SG<br/>update Hs (Rs untouched)"]
+    P53["<b>5.3</b><br/>BG adds exponents<br/>+ fresh masks a_i′"]
+    P54["<b>5.4</b><br/>Fold ODT_SG into ODT_BG<br/>update Rs, Hs, APK"]
+    P55["<b>5.5</b><br/>CSP rewrites every tag<br/>σ′_j = σ_j·H₃(F‖j)^H·(u^{m_j})^{AUX}·V^{m_j}"]
+
+    SG --> P51 --> P52 -->|"ODT_SG"| P53
+    BG --> P53 --> P54 -->|"ODT_BG = (H, AUX, V)"| P55
+    P55 --> CSP

@@ -1,0 +1,72 @@
+{% extends "base_public.html" %}
+{% block title %}Contact — Attestra{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="shell">
+    <div class="hero-inner" style="padding:56px 0 48px">
+      <h1>Talk to our team</h1>
+      <p class="hero-sub">Questions about custody, an evaluation, or the research
+        behind the platform — we respond within one business day.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell contact-grid">
+    <div class="contact-form">
+      <form method="post">
+        <div class="form-row" style="display:flex;gap:14px">
+          <label style="flex:1">Full name
+            <input type="text" name="name" required placeholder="A. Verifier">
+          </label>
+          <label style="flex:1">Work email
+            <input type="email" name="email" required placeholder="you@organization.com">
+          </label>
+        </div>
+        <label>Organization
+          <input type="text" name="organization" placeholder="Acme Data Consortium">
+        </label>
+        <label>What can we help with?
+          <select name="topic">
+            <option>Evaluating the platform</option>
+            <option>Pricing — Team plan</option>
+            <option>Pricing — Enterprise / dedicated deployment</option>
+            <option>Security validation details</option>
+            <option>Research collaboration</option>
+            <option>Something else</option>
+          </select>
+        </label>
+        <label>Message
+          <textarea name="message" rows="5" placeholder="Tell us about your datasets, consortium and storage setup."></textarea>
+        </label>
+        <button class="btn btn-blue btn-lg" type="submit">Send message</button>
+        <p class="hero-note">This demonstration form records nothing externally — it
+          simply confirms receipt.</p>
+      </form>
+    </div>
+
+    <div>
+      <div class="office">
+        <h4>Bengaluru — Engineering</h4>
+        <p>Global Academy of Technology campus, Rajarajeshwari Nagar, Bengaluru 560098</p>
+      </div>
+      <div class="office">
+        <h4>Sales &amp; partnerships</h4>
+        <p>sales@attestra.example · one-business-day response</p>
+      </div>
+      <div class="office">
+        <h4>Security disclosures</h4>
+        <p>security@attestra.example · run the Security Validation Suite first — most
+           questions are answered by watching it.</p>
+      </div>
+      <div class="office">
+        <h4>Prefer to see it yourself?</h4>
+        <p>The console is the honest brochure. <a href="{{ url_for('auth.signup') }}" style="color:var(--blue);font-weight:600">Create a free account</a>
+           and run a verification in minutes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

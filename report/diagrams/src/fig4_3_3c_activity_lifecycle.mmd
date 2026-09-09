@@ -1,0 +1,34 @@
+flowchart TD
+    START([Start]) --> A1["SysGen, publish g, u"]
+    A1 --> A2["KeyGen, each owner draws sk_i, a_i"]
+    A2 --> A3["Compute APK = ∏ pk_i^{H₁(pk_i)}"]
+    A3 --> A4["Split dataset into n blocks, map to Z_q"]
+    A4 --> A5["TagGen, each owner computes σ_ij"]
+    A5 --> A6["Aggregate σ_j, publish Rs and Hs"]
+    A6 --> A7["Upload {m_j, σ_j} to CSP"]
+
+    A7 --> AUDIT{"Audit round"}
+    AUDIT --> B1["TPA samples Q = {(j, v_j)}"]
+    B1 --> B2["CSP computes DP and TP"]
+    B2 --> B3{"Pairing equation<br/>balances?"}
+    B3 -->|Yes| B4["Record PASS"]
+    B3 -->|No| B5["Record FAIL, data corrupted<br/>or parameters stale"]
+
+    B4 --> EVENT{"Ownership event?"}
+    B5 --> EVENT
+
+    EVENT -->|"member joins"| C1["AddOwner, ODT from joiners only"]
+    EVENT -->|"member leaves"| C2["RevokeOwner, cancel H₂, KEEP mask"]
+    EVENT -->|"dataset sold"| C3["OwnerTransfer, SG then BG"]
+    EVENT -->|none| AUDIT
+
+    C1 --> D1["CSP rewrites all tags with ODT"]
+    C2 --> D1
+    C3 --> D1
+    D1 --> D2["Publish updated APK, Rs, Hs"]
+    D2 --> D3{"Was it a sale?"}
+    D3 -->|Yes| D4["Seller's old parameters<br/>no longer verify"]
+    D3 -->|No| AUDIT
+    D4 --> AUDIT
+
+    AUDIT -->|"retention period ends"| END([End])

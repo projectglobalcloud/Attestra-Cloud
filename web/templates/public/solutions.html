@@ -1,0 +1,112 @@
+{% extends "base_public.html" %}
+{% block title %}Solutions — Attestra{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="shell">
+    <div class="hero-inner" style="padding:64px 0 56px">
+      <h1>Industry solutions for data that <span class="hl-accent">changes hands</span></h1>
+      <p class="hero-sub">Five consortium scenarios, modeled on real transactions and
+        shipped as live catalog datasets — every one runnable end to end in the console.</p>
+      <div class="hero-actions">
+        <a class="btn btn-blue btn-lg" href="{{ url_for('auth.signup') }}">Run a scenario <span class="arr">→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="healthcare">
+  <div class="shell">
+    <div class="case-panel">
+      <div class="case-org"><span class="dot">◆</span> Healthcare — Meridian Health Alliance</div>
+      <div class="case-metrics">
+        <div><b>3</b><span>hospitals as equal co-owners</span></div>
+        <div><b>100%</b><span>challenged faults detected</span></div>
+        <div><b>0</b><span>re-keys when membership changes</span></div>
+      </div>
+      <p>Hospital networks pool radiology studies for research and AI development.
+        Attestra keeps every institution a first-class co-owner — no hospital can
+        transfer the archive alone, a departing institution provably loses access,
+        and integrity is verified continuously against the storage provider.</p>
+      <span style="font-size:12.5px;opacity:0.75">Catalog dataset: medical-imaging · 163,090 records</span>
+    </div>
+  </div>
+</section>
+
+<section class="section section-2" id="financial">
+  <div class="shell">
+    <div class="section-head">
+      <h2>Financial services — ledgers under statutory audit</h2>
+      <p class="sub">A regional bank hands its transaction ledger to an external audit
+        firm. With Attestra the handover is a verifiable custody event: the auditor
+        verifies exactly what the bank deposited, and the bank can demonstrate the
+        ledger was never altered in storage — before, during, or after the audit.</p>
+    </div>
+    <div class="plain-grid">
+      <div class="plain-item"><span class="t">Deposit-time evidence</span>
+        <span class="d">The audit firm's verifications are anchored to the exact bytes the bank deposited, not to claims.</span></div>
+      <div class="plain-item"><span class="t">Custody with an end date</span>
+        <span class="d">When the audit closes, the transfer back is cryptographic — the firm's access provably ends.</span></div>
+      <div class="plain-item"><span class="t">Regulator-ready trail</span>
+        <span class="d">Every verification and custody event is logged with timestamps and outcomes.</span></div>
+    </div>
+    <p style="margin-top:24px" class="hero-note">Catalog dataset: financial-ledger · 243,307 records</p>
+  </div>
+</section>
+
+<section class="section" id="research">
+  <div class="shell">
+    <div class="case-panel" style="background:linear-gradient(115deg,#153a1e 0%,#1a7f4e 60%,#3aa571 100%)">
+      <div class="case-org"><span class="dot">◆</span> Research &amp; genomics — Helix Biosciences</div>
+      <div class="case-metrics">
+        <div><b>3</b><span>sequencing labs co-licensing</span></div>
+        <div><b>0 B</b><span>data moved to close the sale</span></div>
+        <div><b>Day 1</b><span>buyer verifications pass from completion</span></div>
+      </div>
+      <p>Three sequencing laboratories jointly license a variant catalog to a
+        pharmaceutical buyer. The sale completes as a cryptographic transfer: the
+        buyer's verifications pass immediately, the labs' credentials retire, and
+        provenance survives the transaction for downstream compliance.</p>
+      <span style="font-size:12.5px;opacity:0.75">Catalog dataset: genomics-variants · 281,387 records</span>
+    </div>
+  </div>
+</section>
+
+<section class="section section-2" id="ai">
+  <div class="shell">
+    <div class="section-head">
+      <h2>AI data supply chain — corpora with provenance</h2>
+      <p class="sub">Labeling vendors sell curated corpora to AI labs that must later
+        answer for their training data. Attestra gives both sides an evidence trail:
+        the lab verifies integrity continuously, and the vendor can prove exactly
+        what was delivered, and when.</p>
+    </div>
+    <div class="plain-grid">
+      <div class="plain-item"><span class="t">Delivery you can cite</span>
+        <span class="d">The protected deposit is the reference for every future "what did we train on" question.</span></div>
+      <div class="plain-item"><span class="t">Resale-ready</span>
+        <span class="d">Chained transfers keep provenance intact when corpora move again.</span></div>
+      <div class="plain-item"><span class="t">Tamper evidence</span>
+        <span class="d">Any post-delivery alteration at the storage layer fails the next verification.</span></div>
+    </div>
+    <p style="margin-top:24px" class="hero-note">Catalog dataset: ai-training-corpus · 53,126 records</p>
+  </div>
+</section>
+
+<section class="section" id="civic">
+  <div class="shell">
+    <div class="section-head">
+      <h2>Civic data infrastructure</h2>
+      <p class="sub">A city transport department and two partner agencies co-own a
+        telemetry archive sold to an urban-analytics firm — three public bodies, one
+        commercial buyer, and a custody chain that stands up to public-records
+        scrutiny. This is the fifth live scenario in the catalog
+        (iot-telemetry · 296,075 records).</p>
+    </div>
+    <div class="hero-actions">
+      <a class="btn btn-blue" href="{{ url_for('auth.signup') }}">Run it in the console <span class="arr">→</span></a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

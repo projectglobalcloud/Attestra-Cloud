@@ -1,0 +1,207 @@
+{% extends "base_console.html" %}
+{% block title %}Transfer Agreements{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Transfer Agreements</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Transfer Agreements</h1>
+    <p class="page-sub">A dataset changes hands only under a signed instrument. Either the
+      holder offers it and the buyer countersigns, or a buyer bids for it and the holder
+      accepts — and only then does the platform move ownership and issue a deed.
+      {% if is_admin %}As the registry you can also settle a request the two sides have not
+      closed themselves.{% endif %}</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-primary" id="new-agreement">Raise an agreement</button>
+  </div>
+</div>
+
+{% if offer_groups %}
+<section class="card" style="margin-bottom:14px">
+  <div class="card-head sect-head-row">
+    <div><h2>Offers on your datasets</h2>
+      <p class="sub">Every open offer, best first. They stay on the table for as long as you
+        hold the asset — accept one whenever you choose, decline any of them, or leave them
+        and keep collecting.</p></div>
+    <span class="badge badge-warn">{{ n_offers }}</span>
+  </div>
+  <div class="card-body flush">
+    {% for g in offer_groups %}
+    <div class="offer-group">
+      <div class="offer-group-head">
+        <a class="link" href="{{ url_for('console.storage_detail', dataset_id=g.dataset.id) }}">
+          <strong>{{ g.dataset.name }}</strong></a>
+        <span class="muted">{{ g.offers|length }} offer{{ 's' if g.offers|length != 1 }} ·
+          highest {{ g.best.consideration_display }}</span>
+      </div>
+      <table class="table">
+        <thead><tr><th>Bidder</th><th>Offer</th><th>Raised</th><th>Terms proposed</th>
+          <th class="actions-col">Actions</th></tr></thead>
+        <tbody>
+          {% for a in g.offers %}
+          <tr>
+            <td><strong>{{ a.buyer.display_name }}</strong>
+              <div class="muted">{{ a.buyer.type_label }}{% if a.buyer.verified %} · verified{% endif %}</div></td>
+            <td><strong>{{ a.consideration_display }}</strong>
+              {% if a.id == g.best.id and g.offers|length > 1 %}
+                <div class="muted">highest</div>{% endif %}</td>
+            <td class="muted">{{ a.created_at.strftime("%d %b, %H:%M") }}</td>
+            <td class="muted">{{ (a.terms[:70] ~ '…') if a.terms|length > 70 else (a.terms or "—") }}</td>
+            <td class="actions-col">
+              <a class="act" href="{{ url_for('console.agreement_detail', agreement_id=a.id) }}">Review</a>
+              <span class="act-sep">|</span>
+              <button class="act" data-accept-offer="{{ a.id }}"
+                      data-name="{{ a.buyer.display_name }}"
+                      data-amount="{{ a.consideration_display }}"
+                      data-ds="{{ g.dataset.name }}">Accept</button>
+              <span class="act-sep">|</span>
+              <button class="act danger" data-decline-offer="{{ a.id }}"
+                      data-name="{{ a.buyer.display_name }}">Decline</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="card-foot">
+    Accepting one offer runs the transfer immediately and closes the others on that asset,
+    with the reason recorded against each. Nothing expires on its own.
+  </div>
+</section>
+{% endif %}
+
+{% if incoming %}
+<section class="card" style="margin-bottom:14px">
+  <div class="card-head sect-head-row">
+    <div>
+      <h2>{{ 'Requests awaiting a decision' if is_admin else 'Waiting for your decision' }}</h2>
+      <p class="sub">{{ 'Instruments still open across the register.' if is_admin
+        else 'These are waiting on you — nothing moves until you act.' }}</p>
+    </div>
+    <span class="badge badge-warn">{{ incoming|length }}</span>
+  </div>
+  <div class="card-body flush">
+    <table class="table">
+      <thead><tr><th>Reference</th><th>Dataset</th><th>Counterparty</th>
+        <th>Consideration</th><th>What is being asked</th>
+        <th class="actions-col">Actions</th></tr></thead>
+      <tbody>
+        {% for a in incoming %}
+        <tr>
+          <td><a class="link" href="{{ url_for('console.agreement_detail', agreement_id=a.id) }}">
+            <strong>{{ a.agreement_ref }}</strong></a>
+            <div class="muted">{{ a.created_at.strftime("%d %b %Y, %H:%M") }}</div></td>
+          <td>{{ a.dataset.name }}</td>
+          <td>{% if a.status == 'awaiting_seller' %}{{ a.buyer.display_name }}
+              <div class="muted">{{ 'wants to acquire it' if not is_admin
+                else 'is bidding for it' }}</div>
+              {% else %}{{ a.seller.display_name }}
+              <div class="muted">{{ 'is offering it to you' if not is_admin
+                else 'is offering it' }}</div>{% endif %}</td>
+          <td>{{ a.consideration_display }}</td>
+          <td>{% if is_admin %}<span class="st st-warn">{{ a.status_label }} —
+                you may approve it</span>
+              {% elif a.is_bid %}<span class="st st-warn">Accept or decline this bid</span>
+              {% else %}<span class="st st-warn">{{ a.status_label }}</span>{% endif %}</td>
+          <td class="actions-col">
+            <a class="act" href="{{ url_for('console.agreement_detail', agreement_id=a.id) }}">Review</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+<div class="stat-row">
+  <div class="stat">
+    <span class="stat-label">Open instruments</span>
+    <span class="stat-value">{{ open_count }}</span>
+    <span class="stat-foot">awaiting one or both signatures</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Completed transfers</span>
+    <span class="stat-value">{{ completed_count }}</span>
+    <span class="stat-foot">each one carrying an issued deed</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Consideration settled</span>
+    <span class="stat-value sm">&#8377;{{ "{:,.0f}".format(value_settled) }}</span>
+    <span class="stat-foot">recorded on completed agreements</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Data moved per sale</span>
+    <span class="stat-value sm">0 bytes</span>
+    <span class="stat-foot">storage re-seals blocks in place</span>
+  </div>
+</div>
+
+<section class="card" data-table>
+  <div class="card-head"><h2>All agreements</h2></div>
+  <div class="tbl-toolbar">
+    <div class="tbl-search">
+      <svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5 18 18"/></svg>
+      <input type="text" data-table-search placeholder="Search by reference, dataset or party">
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" data-refresh title="Refresh">
+      <svg viewBox="0 0 20 20"><path d="M16.5 8A7 7 0 1 0 17 11"/><path d="M17 4v4h-4"/></svg>
+    </button>
+  </div>
+  <div class="card-body flush">
+    {% if agreements %}
+    <table class="table">
+      <thead><tr>
+        <th>Reference</th><th>Dataset</th><th>Transferor</th><th>Transferee</th>
+        <th>Consideration</th><th>Status</th><th>Certificate</th><th class="actions-col">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for a in agreements %}
+        <tr>
+          <td><a class="link" href="{{ url_for('console.agreement_detail', agreement_id=a.id) }}">
+            <strong>{{ a.agreement_ref }}</strong></a>
+            <div class="muted">{{ a.created_at.strftime("%d %b %Y") }}</div></td>
+          <td>{{ a.dataset.name }}</td>
+          <td>{{ a.seller.display_name }}<div class="muted">{{ a.seller.type_label }}{% if
+            a.seller_party_id == my_party_id %} · you{% endif %}</div></td>
+          <td>{{ a.buyer.display_name }}<div class="muted">{{ a.buyer.type_label }}{% if
+            a.buyer_party_id == my_party_id %} · you{% endif %}</div></td>
+          <td>{{ a.consideration_display }}</td>
+          <td><span class="st st-{{ 'ok' if a.status == 'completed'
+                 else ('err' if a.status in ['declined','cancelled'] else 'warn') }}">
+            {{ a.status_label }}</span></td>
+          <td>
+            {% set c = certs.get(a.id) %}
+            {% if c %}<a class="link mono" href="{{ url_for('market.certificate_document', certificate_id=c.certificate_id) }}" target="_blank">{{ c.certificate_id }}</a>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+          <td class="actions-col">
+            <a class="act" href="{{ url_for('console.agreement_detail', agreement_id=a.id) }}">Open</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><p>Nothing yet. Raise an agreement to hand a dataset you hold to
+      somebody else, or <a class="link" href="{{ url_for('market.marketplace') }}">browse the
+      marketplace</a> and bid for one.</p></div>
+    {% endif %}
+  </div>
+  {% if agreements %}
+  <div class="tbl-foot">
+    <span>Total: <b data-table-total>{{ agreements|length }}</b> item(s)</span>
+    <div class="pager" data-table-pager></div>
+  </div>
+  {% endif %}
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script>AgreementsPage.init({{ datasets|tojson }}, {{ parties|tojson }}, {{ my_party_id|tojson }});
+OffersPanel.init();</script>
+{% endblock %}

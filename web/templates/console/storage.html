@@ -1,0 +1,204 @@
+{% extends "base_console.html" %}
+{% block title %}Storage{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Storage</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Storage</h1>
+    <p class="page-sub">Datasets under integrity protection in your account, your own uploaded
+      files, and the consortium catalog available to protect.</p>
+  </div>
+  <div class="page-actions">
+    {% if n_unprotected %}
+    <button class="btn btn-primary" id="protect-all"
+            data-count="{{ n_unprotected }}">Protect all ({{ n_unprotected }})</button>
+    {% endif %}
+    <button class="btn btn-ghost" id="upload-dataset">Upload a dataset</button>
+    <button class="btn btn-{{ 'ghost' if n_unprotected else 'primary' }}"
+            id="goto-catalog">Protect a dataset</button>
+  </div>
+</div>
+
+{% if n_unprotected %}
+<div class="notice">
+  <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+  <div><strong>{{ n_unprotected }} dataset{{ 's' if n_unprotected != 1 }} need{{ '' if n_unprotected != 1 else 's' }}
+    protecting again.</strong> Keys are held in memory only and were rotated out when the
+    service last restarted — the files themselves are untouched. <em>Protect all</em> seals
+    them again, one after another, with the same owners as before.</div>
+</div>
+{% endif %}
+
+<section class="card" id="protect-all-panel" hidden>
+  <div class="card-head sect-head-row">
+    <div><h2 id="pa-heading">Protecting your datasets</h2>
+      <p class="sub" id="pa-status">Starting…</p></div>
+    <span class="live-pill" id="pa-pill"><span class="live-dot"></span><span id="pa-pill-text">Running</span></span>
+  </div>
+  <div class="card-body">
+    <div class="progress"><div class="progress-bar" id="pa-bar"></div></div>
+    <ul class="stepper pf-steps" id="pa-steps"></ul>
+  </div>
+</section>
+
+<div class="tabs" data-tabs="#storage-panes">
+  <button class="tab active" data-pane="#tab-protected">Your datasets <span class="cnt">({{ onboarded|length }})</span></button>
+  <button class="tab" data-pane="#tab-catalog">Data catalog <span class="cnt">({{ catalog|length }})</span></button>
+</div>
+
+<div id="storage-panes">
+  <div class="tabpane active" id="tab-protected">
+    <section class="card" data-table data-page-size="10">
+      <div class="tbl-toolbar">
+        <div class="tbl-search">
+          <svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5 18 18"/></svg>
+          <input type="text" data-table-search placeholder="Search by name, region, group or member">
+        </div>
+        <div class="spacer"></div>
+        <button class="icon-btn" data-refresh title="Refresh">
+          <svg viewBox="0 0 20 20"><path d="M16.5 8A7 7 0 1 0 17 11"/><path d="M17 4v4h-4"/></svg>
+        </button>
+      </div>
+      {% if onboarded %}
+      <div class="card-body flush">
+        <table class="table">
+          <thead><tr>
+            <th>Name / ID</th><th>Region</th><th>Status</th><th>Monitoring</th>
+            <th class="num">Blocks</th><th class="num">Size</th><th>Ownership</th>
+            <th>Created</th><th class="actions-col">Actions</th>
+          </tr></thead>
+          <tbody>
+            {% for d in onboarded %}
+            <tr>
+              <td>
+                <a class="link" href="{{ url_for('console.storage_detail', dataset_id=d.id) }}"><strong>{{ d.name }}</strong></a>
+                <div class="copy-id muted mono" style="font-size:11px">{{ d.dataset_ref }}
+                  <button data-copy="{{ d.dataset_ref }}" title="Copy dataset ID">
+                    <svg viewBox="0 0 20 20"><rect x="7" y="7" width="9" height="10" rx="1.5"/><path d="M13 7V5a1.5 1.5 0 0 0-1.5-1.5H5.5A1.5 1.5 0 0 0 4 5v8a1.5 1.5 0 0 0 1.5 1.5H7"/></svg>
+                  </button></div>
+                {% if d.is_upload %}<div class="muted" style="font-size:11px">Uploaded · {{ d.original_filename }}</div>{% endif %}
+              </td>
+              <td class="muted" style="white-space:nowrap">{{ region_names.get(d.region, d.region) }}<br><span style="font-size:11px">{{ d.region }}</span></td>
+              <td>
+                {% if d.status == 'active' %}<span class="st st-ok">Protected</span>
+                {% elif d.status == 'stale' %}<span class="st st-warn">Needs re-protection</span>
+                {% elif d.status == 'stored' %}<span class="st st-info">Stored, not protected</span>
+                {% elif d.status == 'provisioning' %}<span class="st st-info">Provisioning</span>
+                {% else %}<span class="st st-mut">{{ d.status|capitalize }}</span>{% endif %}
+              </td>
+              <td>{% if d.audit_every_min %}<span class="st st-ok">Every {{ d.audit_every_min }} min</span>
+                  {% else %}<span class="st st-mut">Off</span>{% endif %}</td>
+              <td class="num">{{ d.n_blocks }}</td>
+              <td class="num">{{ "%.1f MB"|format(d.total_bytes / 1048576) if d.total_bytes else "—" }}</td>
+              <td>
+                {% if d.owner_party_id and holders.get(d.owner_party_id) %}
+                  {{ holders[d.owner_party_id].display_name }}
+                  <div class="muted" style="font-size:11px">{{ holders[d.owner_party_id].type_label }} ·
+                    {{ d.owners|length }} key holder{{ 's' if d.owners|length != 1 }}</div>
+                {% else %}
+                  {{ d.group_name }}
+                  <div class="muted" style="font-size:11px">{{ d.owners|length }} key holder{{ 's' if d.owners|length != 1 }}</div>
+                {% endif %}
+              </td>
+              <td class="muted">{{ d.created_at.strftime("%d %b %Y") }}</td>
+              <td class="actions-col">
+                <a class="act" href="{{ url_for('console.storage_detail', dataset_id=d.id) }}">Manage</a>
+                <span class="act-sep">|</span>
+                {% if d.status == 'stored' %}
+                  <button class="act" data-protect-dataset="{{ d.id }}"
+                          data-name="{{ d.name }}"
+                          data-owners="{{ d.owners|join(', ') }}"
+                          data-blocksize="{{ d.block_size }}">Protect</button>
+                {% else %}
+                  <a class="act" href="{{ url_for('console.storage_detail', dataset_id=d.id) }}#tab-integrity">Verify</a>
+                {% endif %}
+                <span class="act-sep">|</span>
+                <button class="act danger" data-delete-dataset="{{ d.id }}">Remove</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="tbl-foot">
+        <span>Total: <b data-table-total>{{ onboarded|length }}</b> item(s)</span>
+        <div class="spacer"></div>
+        <select data-table-size>
+          <option value="10" selected>10 / page</option>
+          <option value="25">25 / page</option>
+          <option value="50">50 / page</option>
+        </select>
+        <div class="pager" data-table-pager></div>
+      </div>
+      {% else %}
+      <div class="card-body">
+        <div class="empty">
+          <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+          <p>Nothing here yet — upload a file of your own, or choose a dataset from the catalog.</p>
+        </div>
+      </div>
+      {% endif %}
+      {% if n_stored %}
+      <div class="card-foot">
+        {{ n_stored }} uploaded file{{ 's' if n_stored != 1 }} {{ 'are' if n_stored != 1 else 'is' }}
+        held on this server without protection yet. The bytes are stored locally beside the
+        console's database — nothing is sent anywhere else — and stay untouched until you
+        protect them, which is when signing keys are issued and every block is sealed.
+      </div>
+      {% endif %}
+      {% if onboarded|selectattr('status', 'equalto', 'stale')|list %}
+      <div class="card-foot">
+        Datasets marked <em>Needs re-protection</em> were protected under a previous service
+        session. Their protection keys are held in secure memory only and were rotated out at
+        restart — protect the dataset again to resume verification.
+      </div>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="tabpane" id="tab-catalog">
+    <section class="card">
+      <div class="card-head">
+        <div><h2>Consortium data catalog</h2>
+          <p class="sub">Datasets your organization is entitled to bring under protection.
+            New protections are provisioned in {{ current_region_name }} ({{ current_region }})
+            unless you choose another region.</p></div>
+      </div>
+      <div class="card-body">
+        <div class="catalog-grid">
+          {% for c in catalog %}
+          <article class="catalog-card">
+            <h3>{{ c.title }}</h3>
+            <p class="desc">{{ c.description[:170] }}{% if c.description|length > 170 %}…{% endif %}</p>
+            {% if c.tags %}
+            <div class="catalog-tags">{% for t in c.tags[:4] %}<span>{{ t }}</span>{% endfor %}</div>
+            {% endif %}
+            <div class="catalog-stats">
+              <span><b>{{ "{:,}".format(c.record_count) }}</b> records</span>
+              <span><b>{{ "%.0f MB"|format(c.total_bytes / 1048576) }}</b></span>
+              <span><b>{{ c.shard_count }}</b> shards</span>
+            </div>
+            <button class="btn btn-primary" data-onboard="{{ c.name }}"
+                    data-owners="{{ c.suggested_owners|join(', ') }}">Protect</button>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>
+  StoragePage.init({
+    regions: {{ regions|tojson }},
+    currentRegion: {{ current_region|tojson }},
+    parties: {{ parties|tojson }},
+  });
+  document.getElementById("goto-catalog").addEventListener("click", () => {
+    document.querySelector('[data-pane="#tab-catalog"]').click();
+  });
+</script>
+{% endblock %}

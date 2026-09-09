@@ -1,0 +1,14 @@
+flowchart LR
+    DO(["Data Owners<br/>(SG / BG)"])
+    SYS["<b>0.0</b><br/>Cloud Auditing System<br/>with Ownership Transfer"]
+    CLOUD(["Cloud Storage<br/>Provider"])
+    AUD(["Third Party<br/>Auditor"])
+
+    DO -->|"data blocks, key material,<br/>ownership requests"| SYS
+    SYS -->|"tags, ownership tokens,<br/>transfer confirmations"| DO
+
+    SYS -->|"blocks + tags, ODTs"| CLOUD
+    CLOUD -->|"storage proofs"| SYS
+
+    SYS -->|"verification parameters,<br/>proofs"| AUD
+    AUD -->|"challenges, audit verdicts"| SYS

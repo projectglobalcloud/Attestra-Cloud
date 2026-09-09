@@ -1,0 +1,27 @@
+# Live data and secrets — never in a repository, and this one is public.
+# instance/ holds the database (accounts, password hashes, deeds), every
+# uploaded dataset, the registry's PRIVATE issuing key and the session secret.
+web/instance/
+
+# The client's source material: the IEEE base paper and the supplied PDFs are
+# third-party copyrighted work. Keep them out of a public repository.
+initial/
+
+# Working notes from the build sessions (they quote demo passwords).
+memory chat.md
+MEMORY.md
+MEMORY_CHAT.md
+
+# macOS and Python litter
+.DS_Store
+**/.DS_Store
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+**/.pytest_cache/
+venv/
+.venv/
+
+# Benchmark artefacts that are regenerated, not source
+code/benchmarks/results/*_full.json

@@ -1,0 +1,32 @@
+flowchart TB
+    subgraph SG["Sale Group (SG): s data owners"]
+        SG1["Owner 1<br/>sk₁, a₁"]
+        SG2["Owner 2<br/>sk₂, a₂"]
+        SG3["Owner s<br/>sk_s, a_s"]
+    end
+
+    subgraph BG["Buy Group (BG): s′ data owners"]
+        BG1["Owner 1′<br/>sk₁′, a₁′"]
+        BG2["Owner s′<br/>sk_s′, a_s′"]
+    end
+
+    CSP["<b>Cloud Storage Provider</b><br/>semi-trusted<br/><br/>stores blocks m_j<br/>stores tags σ_j<br/>generates proofs<br/>applies ODTs"]
+    TPA["<b>Third Party Auditor</b><br/>independent<br/><br/>issues challenges Q<br/>verifies proofs<br/>issues audit reports"]
+
+    SG1 & SG2 & SG3 -->|"tag shares σ_ij"| AGG(["aggregate<br/>σ_j = ∏ σ_ij"])
+    AGG -->|"upload {m_j, σ_j}"| CSP
+    AGG -.->|"publish APK, Rs, Hs"| TPA
+
+    TPA -->|"challenge Q = {(j, v_j)}"| CSP
+    CSP -->|"proof P = (DP, TP)"| TPA
+
+    SG1 & SG2 & SG3 -->|"ODT_SG"| BG1
+    BG1 & BG2 -->|"ODT_BG = (H, AUX, V)"| CSP
+    BG1 -.->|"publish updated APK, Rs, Hs"| TPA
+
+    classDef cloud fill:#e8f0fb,stroke:#2a78d6,stroke-width:2px
+    classDef audit fill:#fdeee7,stroke:#eb6834,stroke-width:2px
+    classDef owner fill:#e7f6f0,stroke:#1baf7a,stroke-width:1px
+    class CSP cloud
+    class TPA audit
+    class SG1,SG2,SG3,BG1,BG2 owner

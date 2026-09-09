@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>How To Run The Project</title>
+<style>
+  @page { size: A4; margin: 11mm 12mm; }
+  :root{
+    --ink:#12161c; --ink2:#3d4654; --muted:#6b7280;
+    --line:#dfe3e9; --bg:#ffffff; --tint:#f5f7fa;
+    --blue:#2a78d6; --orange:#eb6834; --green:#0f8a5f; --red:#c8332f;
+    --term:#12161c; --termtext:#e8eaed; --termcomment:#8f9aa8; --termcmd:#7fd6a8;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:#e9ecf1; color:var(--ink);
+    font:8.5pt/1.32 -apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .page{width:210mm; height:297mm; margin:8mm auto; padding:11mm 12mm;
+    background:var(--bg); box-shadow:0 2px 18px rgba(20,30,50,.13); overflow:hidden;}
+
+  h1{font-size:15pt; line-height:1.15; margin:0 0 1.4mm; letter-spacing:-.25px;}
+  .sub{color:var(--ink2); font-size:8.8pt; margin:0 0 1mm;}
+  .meta{color:var(--muted); font-size:7.4pt; margin:0;}
+  h2{font-size:10pt; margin:2.6mm 0 1.3mm; padding-bottom:1mm;
+     border-bottom:1.8px solid var(--ink); letter-spacing:-.1px;}
+  h2 .os{float:right; font-size:7.6pt; font-weight:650; color:var(--muted);
+     text-transform:uppercase; letter-spacing:.5px; padding-top:1.4mm;}
+  p{margin:0 0 1.5mm;}
+  .rule{height:2.5px; background:var(--ink); margin:2.2mm 0 2.6mm; border:0;}
+
+  .term{background:var(--term); color:var(--termtext); border-radius:4px;
+     padding:2.2mm 2.8mm; margin:1.2mm 0 1.9mm;
+     font-family:ui-monospace,"SF Mono",Menlo,Consolas,"Courier New",monospace;
+     font-size:7.3pt; line-height:1.42; white-space:pre-wrap; word-break:break-word;}
+  .term .c{color:var(--termcomment);}
+  .term .k{color:var(--termcmd); font-weight:600;}
+
+  table{width:100%; border-collapse:collapse; font-size:8.2pt; margin:1.3mm 0 2mm;}
+  th{text-align:left; font-weight:650; font-size:7.2pt; text-transform:uppercase;
+     letter-spacing:.35px; color:var(--muted); border-bottom:1.4px solid var(--ink);
+     padding:1mm 1.4mm;}
+  td{padding:.95mm 1.3mm; border-bottom:1px solid var(--line); vertical-align:top; line-height:1.32;}
+  tr:last-child td{border-bottom:none;}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:8pt;
+     background:var(--tint); padding:.2mm 1mm; border-radius:2px;}
+
+  .note{border-left:3px solid var(--orange); background:#fdf3ee;
+    padding:1.8mm 2.6mm; margin:1.6mm 0; font-size:8.2pt; color:var(--ink2); line-height:1.38;}
+  .note strong{color:var(--ink);}
+  .warn{border-left:3px solid var(--red); background:#fdefee;
+    padding:1.8mm 2.6mm; margin:1.6mm 0; font-size:8.2pt; color:var(--ink2); line-height:1.38;}
+  .warn strong{color:var(--red);}
+
+  .foot{margin-top:2.2mm; padding-top:1.4mm; border-top:1px solid var(--line);
+        font-size:7.2pt; color:var(--muted);}
+
+  @media print{
+    body{background:#fff;}
+    .page{margin:0; padding:0; box-shadow:none; width:auto; height:auto; overflow:visible;}
+    .page + .page{page-break-before:always;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== PAGE 1 ===================== -->
+<div class="page">
+
+  <h1>How To Run The Project</h1>
+  <p class="sub">Copy each block into the terminal, one line at a time. Every command has a comment saying what it does.</p>
+  <p class="meta">Cloud-Based Auditing System with Efficient Ownership Management for Group Data Transactions · Dept. of ISE, Global Academy of Technology</p>
+
+  <hr class="rule">
+
+  <div class="note">
+    <strong>Before starting.</strong> Python 3.10 or newer must be installed. Nothing else is needed: no database, no server, no special hardware. The whole project has only three library dependencies and installs in about thirty seconds.
+  </div>
+
+  <h2>On a Mac<span class="os">use the Terminal app</span></h2>
+
+<div class="term"><span class="c"># STEP 1 - Go into the code folder.
+# Tip: type "cd " then drag the "code" folder onto the Terminal window
+# and the full path appears automatically.</span>
+<span class="k">cd</span> "/Users/YOURNAME/Desktop/project 2 global/code"
+
+<span class="c"># STEP 2 - Install the three required libraries. One time only, about 30 seconds.</span>
+<span class="k">pip3</span> install -r requirements.txt
+
+<span class="c"># STEP 3 - Create the sample datasets. Takes 2 seconds, produces 125 MB.</span>
+<span class="k">python3</span> -m datasets.generate --dataset all --size medium
+
+<span class="c"># STEP 4 - THE MAIN DEMO. Shows the whole story: upload, audit, add an owner,
+# remove an owner, then SELL the dataset. About 1 minute.</span>
+<span class="k">python3</span> -m demo.run_demo
+
+<span class="c"># STEP 5 - THE BEST ONE TO SHOW. Attacks the older research method and breaks
+# it, then runs the identical attack on ours, where it fails. About 1 minute.</span>
+<span class="k">python3</span> -m attacks.collusion
+
+<span class="c"># STEP 6 - Second attack: somebody faking co-ownership of your data. Blocked.</span>
+<span class="k">python3</span> -m attacks.rogue_key
+
+<span class="c"># STEP 7 - Third attack: the cloud secretly corrupting data. Always caught.</span>
+<span class="k">python3</span> -m attacks.tampering
+
+<span class="c"># STEP 8 - Run all 41 tests to prove the code is correct. About 1 minute.</span>
+<span class="k">python3</span> -m pytest tests/ -v</div>
+
+  <h2>On Windows<span class="os">use the terminal inside VS Code</span></h2>
+
+  <p>In VS Code, click <strong>Terminal</strong> in the top menu, then <strong>New Terminal</strong>. A panel opens at the bottom of the window. Type the commands there.</p>
+
+<div class="term"><span class="c"># STEP 1 - Go into the code folder.
+# Tip: right-click the "code" folder, choose "Copy as path", then paste it.</span>
+<span class="k">cd</span> "C:\Users\YOURNAME\Desktop\project 2 global\code"
+
+<span class="c"># STEP 2 - Install the three required libraries. One time only, about 30 seconds.</span>
+<span class="k">pip</span> install -r requirements.txt
+
+<span class="c"># STEP 3 - Create the sample datasets. Takes 2 seconds, produces 125 MB.</span>
+<span class="k">python</span> -m datasets.generate --dataset all --size medium
+
+<span class="c"># STEP 4 - THE MAIN DEMO. Shows the whole story: upload, audit, add an owner,
+# remove an owner, then SELL the dataset. About 1 minute.</span>
+<span class="k">python</span> -m demo.run_demo
+
+<span class="c"># STEP 5 - THE BEST ONE TO SHOW. Attacks the older research method and breaks
+# it, then runs the identical attack on ours, where it fails. About 1 minute.</span>
+<span class="k">python</span> -m attacks.collusion
+
+<span class="c"># STEP 6 - Second attack: somebody faking co-ownership of your data. Blocked.</span>
+<span class="k">python</span> -m attacks.rogue_key
+
+<span class="c"># STEP 7 - Third attack: the cloud secretly corrupting data. Always caught.</span>
+<span class="k">python</span> -m attacks.tampering
+
+<span class="c"># STEP 8 - Run all 41 tests to prove the code is correct. About 1 minute.</span>
+<span class="k">python</span> -m pytest tests/ -v</div>
+
+  <p class="foot">Page 1 of 2 · The only differences between the two systems are on the next page</p>
+</div>
+
+<!-- ===================== PAGE 2 ===================== -->
+<div class="page">
+
+  <h2>The only real differences</h2>
+  <table>
+    <thead><tr><th style="width:30%">Item</th><th style="width:35%">Mac</th><th>Windows</th></tr></thead>
+    <tbody>
+      <tr><td>Python command</td><td><span class="mono">python3</span></td><td><span class="mono">python</span></td></tr>
+      <tr><td>Installer command</td><td><span class="mono">pip3</span></td><td><span class="mono">pip</span></td></tr>
+      <tr><td>Slashes in the path</td><td><span class="mono">/</span> forward</td><td><span class="mono">\</span> backslash</td></tr>
+      <tr><td>Where to type</td><td>Terminal app</td><td>Terminal panel inside VS Code</td></tr>
+    </tbody>
+  </table>
+  <p>Everything after those four differences is identical on both systems.</p>
+
+  <h2>What each command produces</h2>
+  <table>
+    <thead><tr><th style="width:34%">Command</th><th style="width:14%">Time</th><th>What appears on screen</th></tr></thead>
+    <tbody>
+      <tr><td><span class="mono">datasets.generate</span></td><td>2 sec</td><td>Five datasets being written, 125 MB in total</td></tr>
+      <tr><td><span class="mono">demo.run_demo</span></td><td>1 min</td><td>Ten numbered stages, ending in "All 7 protocol checks behaved exactly as expected"</td></tr>
+      <tr><td><span class="mono">attacks.collusion</span></td><td>1 min</td><td>Older method marked BROKEN, this project marked RESISTED</td></tr>
+      <tr><td><span class="mono">attacks.rogue_key</span></td><td>1 min</td><td>Plain method BROKEN, this project RESISTED</td></tr>
+      <tr><td><span class="mono">attacks.tampering</span></td><td>2 min</td><td>A table comparing measured detection rates against theory</td></tr>
+      <tr><td><span class="mono">pytest tests/ -v</span></td><td>1 min</td><td>41 test names, each marked PASSED</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Two failures are supposed to happen.</strong> In the main demo, stage 6 shows FAIL when the cloud corrupts a block, and stage 9 shows FAIL when the seller tries their old credentials after selling. Both are correct results. The demo prints "as expected" beside each one.
+  </div>
+
+  <h2>If something goes wrong</h2>
+
+<div class="term"><span class="c"># PROBLEM: "python is not recognized"   (Windows)
+# CAUSE: Python is not installed, or was installed without adding it to PATH.
+# FIX: install from python.org and TICK THE BOX "Add Python to PATH".
+# Or try this alternative launcher:</span>
+<span class="k">py</span> -m demo.run_demo
+
+<span class="c"># PROBLEM: "command not found: python"   (Mac)
+# FIX: on a Mac the command is python3, not python.</span>
+
+<span class="c"># PROBLEM: "No module named crypto" or "No module named datasets"
+# CAUSE: you are in the wrong folder. You must be INSIDE the "code" folder.
+# Check what folder you are in:</span>
+<span class="k">ls</span>       <span class="c"># on Mac</span>
+<span class="k">dir</span>      <span class="c"># on Windows</span>
+<span class="c"># You should see: crypto, entities, attacks, demo, datasets, tests
+
+# PROBLEM: "no manifest for dataset ..." when running the demo
+# CAUSE: STEP 3 was skipped. The demo reads a real dataset from disk.
+# FIX: run the datasets.generate command first.
+
+# PROBLEM: "externally-managed-environment" during install   (Mac)
+# FIX: add this flag to the install command:</span>
+<span class="k">pip3</span> install -r requirements.txt --break-system-packages</div>
+
+  <div class="warn">
+    <strong>Most common mistake.</strong> Skipping STEP 3. The demo needs the sample datasets to exist before it can run. If the demo stops immediately with a message about a missing manifest, run STEP 3 and then try again.
+  </div>
+
+  <h2>If you are short on time</h2>
+  <p>Steps 5, 6 and 7 need no setup at all, because they build their own data internally. So if a laptop is being difficult, this single command works straight after STEP 2, and it is the most convincing thing to show:</p>
+
+<div class="term"><span class="k">python3</span> -m attacks.collusion    <span class="c"># Mac</span>
+<span class="k">python</span>  -m attacks.collusion    <span class="c"># Windows</span></div>
+
+  <p>It breaks the older published method live, then blocks the identical attack on this project. That single output makes the case faster than any explanation.</p>
+
+  <p class="foot">Page 2 of 2 · All commands verified on macOS. Windows commands differ only in the four items listed above.</p>
+</div>
+
+</body>
+</html>

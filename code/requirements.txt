@@ -1,0 +1,31 @@
+# Cloud-Based Auditing System with Efficient Ownership Management
+# for Group Data Transactions
+#
+# Python 3.10+ required (the code uses PEP 604 unions and PEP 585 generics).
+
+# ---------------------------------------------------------------------------
+# Cryptography -- the only hard runtime dependency
+# ---------------------------------------------------------------------------
+# py_ecc provides BLS12-381 pairings in pure Python. Chosen deliberately over
+# faster native libraries (blspy, petrelic, PBC bindings) for two reasons:
+#
+#   1. It installs everywhere with no compiler, no system libraries, and no
+#      architecture-specific wheels. A project that an examiner cannot run is
+#      worth nothing.
+#   2. It exposes generic group arithmetic -- arbitrary scalar multiplication
+#      in G1/G2 and a raw pairing. Signature-only libraries such as blspy do
+#      NOT expose scalar multiplication, which makes them unusable for a custom
+#      scheme like this one. (Verified: blspy.G1Element has no __mul__.)
+#
+# The cost is speed: see README.md for the honest discussion.
+py_ecc>=7.0.0
+
+# ---------------------------------------------------------------------------
+# Benchmark figures
+# ---------------------------------------------------------------------------
+matplotlib>=3.7.0
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+pytest>=7.4.0

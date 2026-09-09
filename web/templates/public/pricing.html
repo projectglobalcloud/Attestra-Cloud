@@ -1,0 +1,103 @@
+{% extends "base_public.html" %}
+{% block title %}Pricing — Attestra{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="shell">
+    <div class="hero-inner" style="padding:64px 0 56px">
+      <h1>Simple plans for <span class="hl-blue">serious</span> custody</h1>
+      <p class="hero-sub">Start free with the full platform. Scale to Team and
+        Enterprise when your custody footprint does. No metering surprises —
+        verification is always unlimited.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="tier-grid">
+      <div class="tier">
+        <h3>Free</h3>
+        <div class="price">$0 <small>forever</small></div>
+        <p class="for">For evaluation, demos and coursework-scale custody.</p>
+        <ul>
+          <li>Unlimited integrity verifications</li>
+          <li>All 5 catalog datasets</li>
+          <li>Unlimited ownership transfers</li>
+          <li>All security validations</li>
+          <li>Live custody analytics</li>
+          <li>Community support</li>
+        </ul>
+        <a class="btn btn-line btn-block" href="{{ url_for('auth.signup') }}">Start free</a>
+      </div>
+
+      <div class="tier featured">
+        <span class="tier-flag">MOST POPULAR</span>
+        <h3>Team</h3>
+        <div class="price">$249 <small>/ organization / month</small></div>
+        <p class="for">For consortia running production custody on live datasets.</p>
+        <ul>
+          <li>Everything in Free</li>
+          <li>Bring your own datasets &amp; storage endpoints</li>
+          <li>Scheduled verification policies</li>
+          <li>Custody API access &amp; webhooks</li>
+          <li>Role-based access for member organizations</li>
+          <li>Priority support, 1-business-day SLA</li>
+        </ul>
+        <a class="btn btn-blue btn-block" href="{{ url_for('public.contact') }}">Contact sales</a>
+      </div>
+
+      <div class="tier">
+        <h3>Enterprise</h3>
+        <div class="price">Custom</div>
+        <p class="for">For regulated estates with compliance obligations.</p>
+        <ul>
+          <li>Everything in Team</li>
+          <li>Dedicated deployment (your infrastructure)</li>
+          <li>Native pairing backend for 100× throughput</li>
+          <li>Compliance reporting &amp; evidence exports</li>
+          <li>Custom validation scenarios</li>
+          <li>Named support engineer</li>
+        </ul>
+        <a class="btn btn-line btn-block" href="{{ url_for('public.contact') }}">Contact sales</a>
+      </div>
+    </div>
+    <p class="hero-note" style="margin-top:18px">Team and Enterprise tiers describe the
+      productization roadmap of this demonstration platform; the Free tier is fully
+      live today.</p>
+  </div>
+</section>
+
+<section class="section section-2">
+  <div class="shell">
+    <div class="section-head"><h2>Compare plans</h2></div>
+    <table class="cmp">
+      <thead><tr><th>Capability</th><th>Free</th><th>Team</th><th>Enterprise</th></tr></thead>
+      <tbody>
+        <tr><td>Integrity verifications</td><td class="good">Unlimited</td><td class="good">Unlimited</td><td class="good">Unlimited</td></tr>
+        <tr><td>Datasets</td><td>5 catalog datasets</td><td class="good">Your own data</td><td class="good">Your own data</td></tr>
+        <tr><td>Ownership transfers</td><td class="good">Unlimited</td><td class="good">Unlimited</td><td class="good">Unlimited</td></tr>
+        <tr><td>Verification scheduling</td><td>Manual</td><td class="good">Policies</td><td class="good">Policies + SLOs</td></tr>
+        <tr><td>Security validations</td><td class="good">All scenarios</td><td class="good">All scenarios</td><td class="good">+ custom scenarios</td></tr>
+        <tr><td>Deployment</td><td>Shared demo</td><td>Managed</td><td class="good">Dedicated / on-prem</td></tr>
+        <tr><td>Support</td><td>Community</td><td>Priority</td><td class="good">Named engineer</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section">
+  <div class="shell">
+    <div class="section-head"><h2>Pricing FAQ</h2></div>
+    <div class="faq">
+      {% for q, a in faq[:4] %}
+      <div class="faq-item">
+        <button class="faq-q">{{ q }} <span class="ind">+</span></button>
+        <div class="faq-a"><p>{{ a }}</p></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

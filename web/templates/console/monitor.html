@@ -1,0 +1,79 @@
+{% extends "base_console.html" %}
+{% block title %}Monitor{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Monitor</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Monitor</h1>
+    <p class="page-sub">Live operations from this deployment, and the measured performance
+      of the protocol it runs. Every chart is drawn from data at view time — none of them
+      are images.</p>
+  </div>
+  <div class="page-actions">
+    <span class="live-pill" id="live-pill" title="Operations charts refresh automatically">
+      <span class="live-dot"></span><span id="live-text">Live</span>
+    </span>
+    <button class="icon-btn" id="mon-refresh" title="Refresh now">
+      <svg viewBox="0 0 20 20"><path d="M16.5 8A7 7 0 1 0 17 11"/><path d="M17 4v4h-4"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="sect-head-row">
+  <h2 class="sect-title">Operations &mdash; live</h2>
+  <span class="sect-note">Refreshes every 5 seconds. New verifications appear here as they
+    run, including scheduled ones.</span>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head"><div><h2>Verification activity — this deployment</h2>
+      <p class="sub"><span id="ops-count">0</span> verifications · average latency
+        <span id="ops-avg">—</span> · <span id="ops-updated" class="muted">updating…</span></p></div></div>
+    <div class="card-body chart-box" id="ch-ops"><div class="skeleton" style="height:240px"></div></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><div><h2>Verification outcomes</h2>
+      <p class="sub">All verifications recorded by this deployment</p></div></div>
+    <div class="card-body" id="ch-passrate" style="display:flex;align-items:center;justify-content:center;min-height:260px">
+      <div class="skeleton" style="height:168px;width:168px;border-radius:50%"></div>
+    </div>
+  </section>
+</div>
+
+<div class="sect-head-row">
+  <h2 class="sect-title">Protocol performance &mdash; measured</h2>
+  <span class="sect-note" id="bench-note">Loading measurement data…</span>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head"><div><h2>Group setup time vs. group size</h2>
+      <p class="sub">Attestra scales linearly where previous designs scale quadratically</p></div></div>
+    <div class="card-body chart-box" id="ch-keygen"><div class="skeleton" style="height:240px"></div></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><div><h2>Verification cost vs. challenge coverage</h2>
+      <p class="sub">Latency grows only with blocks challenged — never with dataset or group size</p></div></div>
+    <div class="card-body chart-box" id="ch-audit"><div class="skeleton" style="height:240px"></div></div>
+  </section>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head"><div><h2>Membership changes</h2>
+      <p class="sub">Cost follows the number of organizations joining or leaving (log scale)</p></div></div>
+    <div class="card-body chart-box" id="ch-modify"><div class="skeleton" style="height:240px"></div></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><div><h2>Ownership transfer</h2>
+      <p class="sub">Compute scales with participants; the update applied to storage is fixed-size</p></div></div>
+    <div class="card-body chart-box" id="ch-transfer"><div class="skeleton" style="height:240px"></div></div>
+  </section>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>MonitorPage.init();</script>
+{% endblock %}

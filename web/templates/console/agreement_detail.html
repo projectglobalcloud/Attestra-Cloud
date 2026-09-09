@@ -1,0 +1,222 @@
+{% extends "base_console.html" %}
+{% block title %}{{ a.agreement_ref }}{% endblock %}
+{% block crumbs %}<span class="sep">/</span><a href="{{ url_for('console.agreements') }}">Transfer Agreements</a><span class="sep">/</span><span class="here">{{ a.agreement_ref }}</span>{% endblock %}
+{% block content %}
+
+<div class="resource-head">
+  <div>
+    <div class="resource-title">
+      <span class="resource-icon">
+        <svg viewBox="0 0 24 24"><path d="M5 8.5h13M14.5 5l3.5 3.5-3.5 3.5"/><path d="M19 15.5H6M9.5 12 6 15.5 9.5 19"/></svg>
+      </span>
+      <div>
+        <h1>{{ a.agreement_ref }}</h1>
+        <span class="muted" style="font-size:11px">Deed of dataset ownership transfer</span>
+      </div>
+      <span class="st st-{{ 'ok' if a.status == 'completed'
+             else ('err' if a.status in ['declined','cancelled'] else 'warn') }}">{{ a.status_label }}</span>
+    </div>
+    <dl class="resource-meta">
+      <div><dt>Asset</dt><dd>{{ a.dataset.name }}</dd></div>
+      <div><dt>Transferor</dt><dd>{{ a.seller.display_name }}</dd></div>
+      <div><dt>Transferee</dt><dd>{{ a.buyer.display_name }}</dd></div>
+      <div><dt>Consideration</dt><dd>{{ a.consideration_display }}</dd></div>
+      <div><dt>Raised</dt><dd>{{ a.created_at.strftime("%d %b %Y, %H:%M") }}</dd></div>
+    </dl>
+  </div>
+  <div class="page-actions">
+    {% if cert %}
+      <a class="btn btn-primary" href="{{ url_for('market.certificate_document', certificate_id=cert.certificate_id) }}" target="_blank">View certificate</a>
+    {% else %}
+      {% if can_sign_seller %}
+        <button class="btn btn-primary" id="sign-seller">
+          {{ 'Accept and transfer ownership' if a.is_bid else 'Sign as transferor' }}</button>
+      {% endif %}
+      {% if can_sign_buyer %}
+        <button class="btn btn-primary" id="sign-buyer">Countersign &amp; complete transfer</button>
+      {% endif %}
+      {% if can_decline %}
+        <button class="btn btn-ghost" id="decline">Decline</button>
+      {% endif %}
+      {% if can_revise %}
+        <button class="btn btn-ghost" id="revise">Revise my offer</button>
+      {% endif %}
+      {% if can_withdraw %}
+        <button class="btn btn-ghost" id="withdraw">Withdraw</button>
+      {% endif %}
+      {% if can_approve %}
+        <button class="btn btn-{{ 'primary' if not (can_sign_seller or can_sign_buyer) else 'ghost' }}"
+                id="approve">Approve as registry</button>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+{% if a.is_bid and a.status == 'awaiting_seller' %}
+<div class="notice">
+  <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+  <div><strong>{{ a.buyer.display_name }} has bid {{ a.consideration_display }} for
+    {{ a.dataset.name }}</strong> and signed that offer. Ownership stays with
+    {{ a.seller.display_name }} until the bid is accepted — accepting runs the transfer
+    immediately and issues the deed.{% if is_admin %} As the registry you may also approve it
+    on the holder's behalf; the deed will record that it was you who did so.{% endif %}</div>
+</div>
+{% endif %}
+
+<section class="card" id="transfer-live" hidden>
+  <div class="card-head sect-head-row">
+    <div><h2 id="tl-heading">Executing the transfer</h2>
+      <p class="sub" id="tl-sub">{{ a.agreement_ref }} · {{ a.dataset.name }}</p></div>
+    <span class="live-pill" id="tl-pill"><span class="live-dot"></span><span id="tl-pill-text">Running</span></span>
+  </div>
+  <div class="card-body">
+    <div class="progress"><div class="progress-bar" id="tl-bar"></div></div>
+    <p class="progress-note" id="tl-status">Starting…</p>
+    <ul class="stepper" id="tl-steps">
+      <li><span class="step-dot">1</span><div class="step-body">
+        <h4>Confirm the transferor still holds the data</h4>
+        <p>A sale of something the seller cannot prove it has is not recorded.</p></div></li>
+      <li><span class="step-dot">2</span><div class="step-body">
+        <h4>Transferor cancels its BLS signing exponents</h4>
+        <p>Its authority over these tags is spent before anyone else gains any.</p></div></li>
+      <li><span class="step-dot">3</span><div class="step-body">
+        <h4>Transferee accepts; every tag re-signed under its key</h4>
+        <p>The blocks are re-sealed where they lie — no data is copied or moved.</p></div></li>
+      <li><span class="step-dot">4</span><div class="step-body">
+        <h4>Transferor's BLS credentials checked — they must now fail</h4>
+        <p>The finding that answers a later denial that the sale happened.</p></div></li>
+      <li><span class="step-dot">5</span><div class="step-body">
+        <h4>Registry signs and issues the deed</h4>
+        <p>The record is signed with the registry's Ed25519 key and published.</p></div></li>
+    </ul>
+    <div id="tl-bls" class="bls-block" hidden></div>
+    <details class="techlog"><summary>Protocol log</summary>
+      <pre class="joblog" id="tl-log"></pre></details>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-head"><h2>Progress</h2></div>
+  <div class="card-body">
+    <ol class="stepper">
+      {% for s in steps %}
+      <li class="{{ s.state }}">
+        <span class="step-dot"></span>
+        <div class="step-body">
+          <h4>{{ s.title }}</h4>
+          <p>{{ s.note }}</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    {% if a.status == 'awaiting_buyer' %}
+    <div class="notice">
+      <strong>Nothing has moved yet.</strong> The transferor has signed, but ownership stays
+      where it is until {{ a.buyer.display_name }} countersigns. Declining now leaves the
+      dataset exactly as it was.
+    </div>
+    {% endif %}
+    {% if a.status == 'declined' and a.decline_reason %}
+    <div class="notice"><strong>Declined:</strong> {{ a.decline_reason }}</div>
+    {% endif %}
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head"><h2>Transferor</h2></div>
+    <div class="card-body">
+      <div class="cost-rows">
+        <div class="cost-line"><span>Party</span><b>{{ a.seller.display_name }}</b></div>
+        <div class="cost-line"><span>Legal name</span><b>{{ a.seller.legal_name }}</b></div>
+        <div class="cost-line"><span>Type</span><b>{{ a.seller.type_label }}</b></div>
+        <div class="cost-line"><span>Register reference</span><b class="mono">{{ a.seller.party_ref }}</b></div>
+        <div class="cost-line"><span>Registration</span><b>{{ a.seller.registration_id or "—" }}</b></div>
+        <div class="cost-line"><span>Jurisdiction</span><b>{{ a.seller.jurisdiction or "—" }}</b></div>
+        <div class="cost-line"><span>Identity</span>
+          <b><span class="st st-{{ 'ok' if a.seller.verified else 'mut' }}">
+            {{ "Verified" if a.seller.verified else "Unverified" }}</span></b></div>
+        <div class="cost-line"><span>Signature</span>
+          <b>{% if a.seller_signed_at %}{{ a.seller_signed_at.strftime("%d %b %Y, %H:%M") }}{% else %}Not yet signed{% endif %}</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Transferee</h2></div>
+    <div class="card-body">
+      <div class="cost-rows">
+        <div class="cost-line"><span>Party</span><b>{{ a.buyer.display_name }}</b></div>
+        <div class="cost-line"><span>Legal name</span><b>{{ a.buyer.legal_name }}</b></div>
+        <div class="cost-line"><span>Type</span><b>{{ a.buyer.type_label }}</b></div>
+        <div class="cost-line"><span>Register reference</span><b class="mono">{{ a.buyer.party_ref }}</b></div>
+        <div class="cost-line"><span>Registration</span><b>{{ a.buyer.registration_id or "—" }}</b></div>
+        <div class="cost-line"><span>Jurisdiction</span><b>{{ a.buyer.jurisdiction or "—" }}</b></div>
+        <div class="cost-line"><span>Identity</span>
+          <b><span class="st st-{{ 'ok' if a.buyer.verified else 'mut' }}">
+            {{ "Verified" if a.buyer.verified else "Unverified" }}</span></b></div>
+        <div class="cost-line"><span>Signature</span>
+          <b>{% if a.buyer_signed_at %}{{ a.buyer_signed_at.strftime("%d %b %Y, %H:%M") }}{% else %}Not yet signed{% endif %}</b></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<section class="card">
+  <div class="card-head"><h2>Terms of the instrument</h2></div>
+  <div class="card-body">
+    <div class="cost-rows">
+      <div class="cost-line"><span>Asset</span><b>{{ a.dataset.name }} ({{ a.dataset.region }})</b></div>
+      <div class="cost-line"><span>Consideration</span><b>{{ a.consideration_display }}</b></div>
+      <div class="cost-line"><span>Payment reference</span><b class="mono">{{ a.payment_reference or "—" }}</b></div>
+      {% if a.listing %}
+      <div class="cost-line"><span>Marketplace listing</span><b class="mono">{{ a.listing.listing_ref }}</b></div>
+      {% endif %}
+    </div>
+    {% if a.terms %}
+    <h3 style="margin-top:18px">Conditions</h3>
+    <p class="muted" style="white-space:pre-wrap;max-width:80ch">{{ a.terms }}</p>
+    {% endif %}
+  </div>
+</section>
+
+{% if cert %}
+<section class="card">
+  <div class="card-head"><h2>Issued certificate</h2></div>
+  <div class="card-body">
+    <div class="cost-rows">
+      <div class="cost-line"><span>Certificate number</span>
+        <b><span class="copy-id mono" data-copy="{{ cert.certificate_id }}">{{ cert.certificate_id }}</span></b></div>
+      <div class="cost-line"><span>Issued</span><b>{{ cert.issued_at.strftime("%d %b %Y, %H:%M") }}</b></div>
+      <div class="cost-line"><span>Document hash</span><b class="mono">{{ cert.payload_hash[:32] }}…</b></div>
+    </div>
+    <p class="field-note" style="margin-top:14px">
+      Anyone can check this certificate at
+      <a class="link" href="{{ url_for('market.verify') }}" target="_blank">/verify</a>
+      without an account.
+    </p>
+  </div>
+</section>
+{% endif %}
+
+<section class="card">
+  <div class="card-head"><h2>Execution log</h2></div>
+  <div class="card-body">
+    <div class="joblog" id="exec-log" hidden></div>
+    <p class="muted" id="exec-idle">
+      {% if a.status == 'completed' %}
+        Transfer executed on {{ a.completed_at.strftime("%d %b %Y at %H:%M") }}. The
+        transferor was verified as holding intact data, ownership moved in two signed halves,
+        the transferee's own credentials were verified against the storage provider, and the
+        transferor's retained parameters were confirmed to no longer verify.
+      {% else %}
+        When the transferee countersigns, the transfer runs here and the steps are recorded.
+      {% endif %}
+    </p>
+  </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script>AgreementDetailPage.init({{ a.id }}, {{ a.dataset_id }});</script>
+{% endblock %}

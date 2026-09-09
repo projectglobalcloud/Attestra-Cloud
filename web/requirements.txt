@@ -1,0 +1,17 @@
+# Web console dependencies (the protocol itself needs only code/requirements.txt)
+flask>=3.0
+flask-sqlalchemy>=3.1
+flask-login>=0.6
+
+# Ed25519 for the registry's issuing key and every party signature. It was
+# always imported by services/registry.py; it belongs in the list.
+cryptography>=42.0
+
+# The server used in a deployment. Harmless locally — python3 app.py still
+# runs Flask's own development server.
+gunicorn>=21.2
+
+# Database: SQLite is used by default (zero setup). To run against MySQL as
+# named in report §3.2, install a driver and set DATABASE_URL, e.g.
+#   pip install pymysql
+#   export DATABASE_URL="mysql+pymysql://user:pass@localhost/attestra"

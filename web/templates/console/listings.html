@@ -1,0 +1,99 @@
+{% extends "base_console.html" %}
+{% block title %}Marketplace Listings{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Marketplace Listings</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Marketplace Listings</h1>
+    <p class="page-sub">Datasets you have offered for sale. A buyer who accepts a listing
+      raises a transfer agreement against it; when that agreement completes, the listing is
+      marked sold and the deed records which listing it came from.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-ghost" href="{{ url_for('market.marketplace') }}" target="_blank">View public marketplace</a>
+    <button class="btn btn-primary" id="new-listing">List a dataset</button>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat">
+    <span class="stat-label">Live listings</span>
+    <span class="stat-value">{{ live }}</span>
+    <span class="stat-foot">visible on the public marketplace</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Sold</span>
+    <span class="stat-value">{{ sold }}</span>
+    <span class="stat-foot">completed under a signed agreement</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Gross value sold</span>
+    <span class="stat-value sm">&#8377;{{ "{:,.0f}".format(gross) }}</span>
+    <span class="stat-foot">consideration recorded on deeds</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Delivery</span>
+    <span class="stat-value sm">In place</span>
+    <span class="stat-foot">no copy is shipped to the buyer</span>
+  </div>
+</div>
+
+<section class="card" data-table>
+  <div class="card-head"><h2>Your listings</h2></div>
+  <div class="tbl-toolbar">
+    <div class="tbl-search">
+      <svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5 18 18"/></svg>
+      <input type="text" data-table-search placeholder="Search by title, dataset or seller">
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" data-refresh title="Refresh">
+      <svg viewBox="0 0 20 20"><path d="M16.5 8A7 7 0 1 0 17 11"/><path d="M17 4v4h-4"/></svg>
+    </button>
+  </div>
+  <div class="card-body flush">
+    {% if listings %}
+    <table class="table">
+      <thead><tr>
+        <th>Listing</th><th>Dataset</th><th>Seller</th><th>Category</th>
+        <th>Price</th><th>Status</th><th class="actions-col">Actions</th>
+      </tr></thead>
+      <tbody>
+        {% for l in listings %}
+        <tr>
+          <td><strong>{{ l.title }}</strong>
+            <div class="muted mono">{{ l.listing_ref }}</div></td>
+          <td>{{ l.dataset.name }}</td>
+          <td>{{ l.seller.display_name }}</td>
+          <td>{{ l.category }}</td>
+          <td>{{ l.price_display }}</td>
+          <td><span class="st st-{{ 'ok' if l.status == 'active'
+                 else ('info' if l.status == 'sold'
+                 else ('warn' if l.status == 'under_offer' else 'mut')) }}">
+            {{ l.status.replace("_", " ")|capitalize }}</span></td>
+          <td class="actions-col">
+            <a class="act" href="{{ url_for('market.listing_detail', listing_id=l.id) }}" target="_blank">View</a>
+            {% if l.status != 'sold' and l.status != 'withdrawn' %}
+              <span class="act-sep">|</span>
+              <a class="act" href="#" data-withdraw="{{ l.id }}">Withdraw</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty"><p>No listings yet. List a protected dataset to offer it for sale.</p></div>
+    {% endif %}
+  </div>
+  {% if listings %}
+  <div class="tbl-foot">
+    <span>Total: <b data-table-total>{{ listings|length }}</b> item(s)</span>
+    <div class="pager" data-table-pager></div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script>ListingsPage.init({{ datasets|tojson }}, {{ parties|tojson }});</script>
+{% endblock %}

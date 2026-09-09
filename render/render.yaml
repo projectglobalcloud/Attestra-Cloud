@@ -1,0 +1,47 @@
+# Attestra on Render — Blueprint
+#
+# Render reads this file from the repository root and creates everything in it.
+# The image is the same one that was built and tested for Fly.io; only the
+# hosting around it differs.
+#
+# In the dashboard: New → Blueprint → point it at this repository.
+
+services:
+  - type: web
+    name: attestra-registry
+    runtime: docker
+    dockerfilePath: ./fly.io/Dockerfile     # the same image, shared by both targets
+    dockerContext: .
+    region: singapore                       # closest Render region to India
+    plan: starter                           # NOT free — see the note below on disks
+
+    # ONE INSTANCE, ALWAYS. The protection keys, the live protocol state and
+    # the verification scheduler live in one process's memory by design (keys
+    # are never written to disk). A second instance would be a second, empty
+    # universe: a dataset protected in one would read as "needs re-protection"
+    # in the other.
+    numInstances: 1
+
+    healthCheckPath: /
+
+    # Everything that must outlive a deploy. Without this disk the database,
+    # the uploaded datasets and the registry's issuing key are wiped on every
+    # restart — which is why the free plan is not an option here.
+    disk:
+      name: attestra-data
+      mountPath: /data
+      sizeGB: 3
+
+    envVars:
+      - key: ATTESTRA_INSTANCE_DIR
+        value: /data/instance
+      - key: ATTESTRA_MAX_UPLOAD_MB
+        value: "512"
+      # Hidden sections. Set either to "1" to bring one back.
+      - key: ATTESTRA_ACCESS_KEYS
+        value: "0"
+      - key: ATTESTRA_BILLING
+        value: "0"
+      # Generated once by Render and kept; sessions then survive a disk reset.
+      - key: SECRET_KEY
+        generateValue: true

@@ -1,0 +1,110 @@
+{% extends "base_console.html" %}
+{% block title %}Access Keys{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Access Keys</span>{% endblock %}
+{% block content %}
+
+<div class="page-head">
+  <div>
+    <h1>Access Keys</h1>
+    <p class="page-sub">Credential pairs for calling the Attestra API from your own systems —
+      pipelines that trigger verifications, custody dashboards or archival jobs. A key
+      authenticates as this account, so it inherits exactly its permissions.</p>
+  </div>
+  <div class="page-actions">
+    <button class="btn btn-primary" id="ak-create">Create access key</button>
+  </div>
+</div>
+
+<div class="secret-reveal" id="ak-reveal" hidden></div>
+
+<div class="price-note">
+  <svg viewBox="0 0 20 20"><path d="M10 2l7 3v5c0 4.5-3 7.5-7 8.5C6 17.5 3 14.5 3 10V5z"/><path d="M7.5 10l2 2 3.5-4"/></svg>
+  <div>Secrets are shown <strong>once</strong> at creation and stored only as a hash.
+    Rotate keys regularly and disable any key you no longer recognize. An account can hold
+    up to 5 keys.</div>
+</div>
+
+<section class="card" data-table>
+  <div class="card-head"><h2>Your keys</h2></div>
+  <div class="card-body flush">
+    {% if keys %}
+    <table class="table">
+      <thead><tr><th>AccessKey ID</th><th>Description</th><th>Status</th>
+        <th>Created</th><th>Last used</th><th class="actions-col">Actions</th></tr></thead>
+      <tbody>
+        {% for k in keys %}
+        <tr>
+          <td><span class="copy-id mono">{{ k.key_id }}
+            <button data-copy="{{ k.key_id }}" title="Copy">
+              <svg viewBox="0 0 20 20"><rect x="7" y="7" width="9" height="10" rx="1.5"/><path d="M13 7V5a1.5 1.5 0 0 0-1.5-1.5H5.5A1.5 1.5 0 0 0 4 5v8a1.5 1.5 0 0 0 1.5 1.5H7"/></svg>
+            </button></span></td>
+          <td>{{ k.description or "—" }}</td>
+          <td><span class="st st-{{ 'ok' if k.status == 'active' else 'mut' }}">{{ k.status|capitalize }}</span></td>
+          <td class="muted">{{ k.created_at.strftime("%d %b %Y, %H:%M") }}</td>
+          <td class="muted">{{ k.last_used_at.strftime("%d %b %Y, %H:%M") if k.last_used_at else "never" }}</td>
+          <td class="actions-col">
+            <button class="act" data-key-toggle="{{ k.id }}">{{ "Disable" if k.status == "active" else "Enable" }}</button>
+            <span class="act-sep">|</span>
+            <button class="act danger" data-key-delete="{{ k.id }}">Delete</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">
+      <svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="5"/><path d="M11.5 11.5 21 21M17 17l2.5-2.5M14 20l2.5-2.5"/></svg>
+      <p>No access keys yet. Create one to call the API programmatically.</p>
+    </div>
+    {% endif %}
+  </div>
+  {% if keys %}
+  <div class="tbl-foot"><span>Total: <b>{{ keys|length }}</b> of 5 keys</span></div>
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <div><h2>Using a key</h2>
+      <p class="sub">A key acts as this account and as {{ acting_as }} — it can do what you can
+        do here, and nothing more. Every call it makes is recorded against the same party.</p></div>
+  </div>
+  <div class="card-body">
+    <p class="muted" style="margin-bottom:6px"><strong>1 · List what you hold.</strong>
+      Either header form works.</p>
+    <pre class="joblog" style="max-height:none">curl -s {{ api_base }}/api/datasets \
+  -H "Authorization: Bearer AKAT…:&lt;secret&gt;"</pre>
+
+    <p class="muted" style="margin:14px 0 6px"><strong>2 · Run a verification</strong> against a
+      dataset you hold. It answers with a job id.</p>
+    <pre class="joblog" style="max-height:none">curl -s -X POST {{ api_base }}/api/datasets/&lt;id&gt;/verify-run \
+  -H "X-Attestra-Key: AKAT…" -H "X-Attestra-Secret: &lt;secret&gt;" \
+  -H "Content-Type: application/json" -d '{"c": 10}'</pre>
+
+    <p class="muted" style="margin:14px 0 6px"><strong>3 · Follow it to the result</strong> —
+      the same steps the console shows, challenge through pairing check.</p>
+    <pre class="joblog" style="max-height:none">curl -s {{ api_base }}/api/jobs/&lt;job_id&gt; \
+  -H "Authorization: Bearer AKAT…:&lt;secret&gt;"</pre>
+
+    <table class="table" style="margin-top:18px">
+      <thead><tr><th>Operation</th><th>Call</th></tr></thead>
+      <tbody>
+        <tr><td>Datasets you hold</td><td class="mono">GET /api/datasets</td></tr>
+        <tr><td>Run a verification</td><td class="mono">POST /api/datasets/&lt;id&gt;/verify-run</td></tr>
+        <tr><td>Follow any operation</td><td class="mono">GET /api/jobs/&lt;job_id&gt;</td></tr>
+        <tr><td>What the platform is doing for you</td><td class="mono">GET /api/processes</td></tr>
+        <tr><td>Offers on a dataset you hold</td><td class="mono">GET /api/datasets/&lt;id&gt;/offers</td></tr>
+        <tr><td>Bid for a listed dataset</td><td class="mono">POST /api/offers</td></tr>
+        <tr><td>Accept an offer made to you</td><td class="mono">POST /api/agreements/&lt;id&gt;/accept</td></tr>
+      </tbody>
+    </table>
+    <p class="field-note">A disabled key is refused. Signing an agreement, admitting an owner or
+      transferring ownership all work the same way through a key — the register records the
+      party, not the channel.</p>
+  </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script>KeysPage.init();</script>
+{% endblock %}

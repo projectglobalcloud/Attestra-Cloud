@@ -1,0 +1,37 @@
+flowchart TB
+    DO(["Data Owners"])
+    CLOUD[("D1: Block &<br/>Tag Store")]
+    PARAMS[("D2: Verification<br/>Parameters")]
+    LOG[("D3: Audit Log")]
+    AUD(["TPA"])
+
+    P1["<b>1.0</b><br/>Key Generation<br/>sk_i, pk_i, APK"]
+    P2["<b>2.0</b><br/>Tag Generation<br/>σ_ij → σ_j"]
+    P3["<b>3.0</b><br/>Integrity Auditing<br/>challenge / proof / verify"]
+    P4["<b>4.0</b><br/>Ownership Modification<br/>Add / Revoke"]
+    P5["<b>5.0</b><br/>Ownership Transfer<br/>SG → BG"]
+    P6["<b>6.0</b><br/>Report Generation"]
+
+    DO --> P1
+    P1 -->|"APK"| PARAMS
+    P1 -->|"key pairs"| P2
+
+    DO -->|"file blocks"| P2
+    P2 -->|"{m_j, σ_j}"| CLOUD
+    P2 -->|"Rs, Hs"| PARAMS
+
+    AUD --> P3
+    CLOUD -->|"blocks + tags"| P3
+    PARAMS -->|"APK, Rs, Hs"| P3
+    P3 -->|"verdict"| LOG
+
+    DO -->|"add / revoke request"| P4
+    P4 -->|"ODT"| CLOUD
+    P4 -->|"updated Rs, Hs, APK"| PARAMS
+
+    DO -->|"sale agreement"| P5
+    P5 -->|"ODT_SG → ODT_BG"| CLOUD
+    P5 -->|"updated parameters"| PARAMS
+
+    LOG --> P6
+    P6 -->|"audit report"| AUD

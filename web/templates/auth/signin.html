@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Attestra</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232a5788'/><path d='M30 68 L50 30 L70 68 Z' fill='none' stroke='white' stroke-width='7' stroke-linejoin='round'/></svg>">
+</head>
+<body class="auth-body">
+<div class="auth-split">
+  <div class="auth-panel">
+    <a class="brand" href="{{ url_for('public.landing') }}">
+      <span class="brand-mark" aria-hidden="true"></span> Attestra
+    </a>
+    <div class="auth-card">
+      <h1>Sign in</h1>
+      <p class="auth-sub">Welcome back. Your verification log is waiting.</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+      <form method="post">
+        <label>Work email
+          <input type="email" name="email" required autofocus autocomplete="email"
+                 placeholder="you@organization.com">
+        </label>
+        <label>Password
+          <input type="password" name="password" required autocomplete="current-password">
+        </label>
+        <label class="check">
+          <input type="checkbox" name="remember" checked> Stay signed in
+        </label>
+        <button class="btn btn-blue btn-block" type="submit">Sign in</button>
+      </form>
+      <p class="auth-alt">New to Attestra?
+        <a href="{{ url_for('auth.signup') }}">Create an account</a></p>
+    </div>
+    <p class="auth-fine">Demonstration environment · all datasets synthetic</p>
+  </div>
+  <div class="auth-visual">
+    <div class="auth-quote">
+      <span class="mark">“</span>
+      <p>Storage receipts are not proof. We verified our archive against the
+        provider every week for a year — and the one week it failed, we knew
+        within the hour, not at restore time.</p>
+      <footer>Data platform lead, Meridian Health Alliance</footer>
+      <div class="auth-stats">
+        <div><b>&lt;1 s</b><span>typical verification</span></div>
+        <div><b>~128 B</b><span>proof size, any dataset</span></div>
+        <div><b>100%</b><span>challenged faults caught</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

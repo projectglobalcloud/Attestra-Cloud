@@ -1,0 +1,321 @@
+{% extends "base_console.html" %}
+{% block title %}Overview{% endblock %}
+{% block crumbs %}<span class="sep">/</span><span class="here">Overview</span>{% endblock %}
+{% block content %}
+
+<div class="wb-hello">
+  <div>
+    <h1>{{ greeting }}, {{ current_user.name.split(' ')[0] }}</h1>
+    <div class="wb-meta">
+      <span>Account ID <b class="mono">{{ current_user.account_id }}</b></span>
+      {% if current_user.organization %}<span>Organization <b>{{ current_user.organization }}</b></span>{% endif %}
+      <span>Region <b>{{ current_region_name }} ({{ current_region }})</b></span>
+      <span>Plan <b>Free</b></span>
+    </div>
+  </div>
+  <div class="wb-shortcuts" id="wb-favs"
+       data-defaults='[{"label": "Storage", "href": "{{ url_for('console.storage') }}"},
+                       {"label": "Integrity Center", "href": "{{ url_for('console.integrity') }}"},
+                       {"label": "Monitor", "href": "{{ url_for('console.monitor') }}"},
+                       {"label": "Ownership Register", "href": "{{ url_for('console.parties') }}"}]'></div>
+</div>
+
+{% if n_stale %}
+<div class="notice">
+  <svg viewBox="0 0 20 20"><path d="M10 3 1.8 17h16.4z"/><path d="M10 8.5v3.8M10 14.8v.4"/></svg>
+  <div><strong>{{ n_stale }} dataset{{ 's' if n_stale != 1 }}</strong> lost in-memory protection
+    state when the service last restarted (keys are never written to disk).
+    <a href="{{ url_for('console.storage') }}">Protect {{ 'them' if n_stale != 1 else 'it' }} again from Storage</a>
+    to resume verification.</div>
+</div>
+{% endif %}
+
+<section class="card" id="process-feed">
+  <div class="card-head sect-head-row">
+    <div>
+      <h2>What the platform is doing</h2>
+      <p class="sub">Protection, verification and ownership transfers as they happen —
+        summarised, with the BLS12-381 signing a click away.</p>
+    </div>
+    <span class="live-pill" id="pf-pill"><span class="live-dot"></span><span id="pf-pill-text">Live</span></span>
+  </div>
+  <div class="card-body" id="pf-body">
+    <p class="pf-headline" id="pf-summary"></p>
+    <p class="muted" id="pf-empty">Nothing is running at the moment. Protect a dataset, run a
+      verification or accept a transfer and it will appear here as it happens.</p>
+    <div id="pf-list"></div>
+    <p class="field-note">One line per operation — open any of them to see the steps and the
+      BLS12-381 signing behind it.</p>
+  </div>
+</section>
+
+{% if inbox %}
+<section class="card" style="margin-bottom:14px">
+  <div class="card-head sect-head-row">
+    <div><h2>{{ 'Requests open on the register' if is_admin else 'Waiting for your decision' }}</h2>
+      <p class="sub">{{ 'Instruments neither side has closed yet.' if is_admin
+        else 'Somebody is waiting on you. Nothing moves until you act.' }}</p></div>
+    <span class="badge badge-warn">{{ inbox|length }}</span>
+  </div>
+  <div class="card-body flush">
+    <ul class="ann-list">
+      {% for a in inbox %}
+      <li>
+        <span class="ann-tag warn">{{ 'Bid' if a.is_bid else 'Agreement' }}</span>
+        <p>
+          {% if is_admin %}
+            <strong>{{ a.buyer.display_name }}</strong> to acquire
+            <strong>{{ a.dataset.name }}</strong> from
+            <strong>{{ a.seller.display_name }}</strong> for
+            <strong>{{ a.consideration_display }}</strong> — awaiting
+            {{ 'the holder' if a.status == 'awaiting_seller' else 'the transferee' }}
+          {% elif a.status == 'awaiting_seller' %}
+            <strong>{{ a.buyer.display_name }}</strong> offers
+            <strong>{{ a.consideration_display }}</strong> for
+            <strong>{{ a.dataset.name }}</strong>
+          {% else %}
+            <strong>{{ a.seller.display_name }}</strong> offers you
+            <strong>{{ a.dataset.name }}</strong> for
+            <strong>{{ a.consideration_display }}</strong>
+          {% endif %}
+          — <a class="link" href="{{ url_for('console.agreement_detail', agreement_id=a.id) }}">review {{ a.agreement_ref }}</a>
+        </p>
+        <small>Raised {{ a.created_at.strftime("%d %b %Y, %H:%M") }}</small>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endif %}
+
+<div class="res-cards">
+  <a class="res-card" href="{{ url_for('console.storage') }}">
+    <div class="rc-top"><span class="rc-label">Protected datasets</span>
+      <span class="rc-ico"><svg viewBox="0 0 20 20"><ellipse cx="10" cy="4.5" rx="6.5" ry="2.3"/><path d="M3.5 4.5v11c0 1.3 2.9 2.3 6.5 2.3s6.5-1 6.5-2.3v-11"/><path d="M3.5 10c0 1.3 2.9 2.3 6.5 2.3s6.5-1 6.5-2.3"/></svg></span></div>
+    <div class="rc-num">{{ n_active }}</div>
+    <div class="rc-foot">{{ total_blocks }} blocks · {{ "%.0f MB"|format(total_bytes / 1048576) if total_bytes else "0 MB" }} under protection</div>
+  </a>
+  <a class="res-card" href="{{ url_for('console.integrity') }}">
+    <div class="rc-top"><span class="rc-label">Verifications</span>
+      <span class="rc-ico"><svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="5.5"/><path d="M13 13l4.5 4.5"/><path d="M6.8 9l1.7 1.7 3-3.4"/></svg></span></div>
+    <div class="rc-num">{{ n_audits }}</div>
+    <div class="rc-foot">{{ n_passed }} passed · {{ n_failed }} failed
+      {% if pass_rate is not none %} · {{ "%.0f%%"|format(pass_rate) }} success{% endif %}</div>
+  </a>
+  <a class="res-card" href="{{ url_for('console.certificates_page') }}">
+    <div class="rc-top"><span class="rc-label">Certificates issued</span>
+      <span class="rc-ico"><svg viewBox="0 0 20 20"><circle cx="10" cy="8" r="5"/><path d="M7.6 8.2 9.3 9.9l3-3.3"/><path d="M7 12.6 6 18l4-2 4 2-1-5.4"/></svg></span></div>
+    <div class="rc-num">{{ n_certificates }}</div>
+    <div class="rc-foot">&#8377;{{ "{:,.0f}".format(settled_value) }} settled
+      {% if n_open_agreements %} · {{ n_open_agreements }} agreement(s) open{% endif %}</div>
+  </a>
+  {% if show_billing %}
+  <a class="res-card" href="{{ url_for('console.billing_page') }}">
+    <div class="rc-top"><span class="rc-label">Month-to-date cost</span>
+      <span class="rc-ico"><svg viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="1.5"/><path d="M3 8h14M6.5 12h3"/></svg></span></div>
+    <div class="rc-num">${{ "%.2f"|format(cycle.total) }}</div>
+    <div class="rc-foot">{{ cycle.period }} · Free plan allowances applied</div>
+  </a>
+  {% else %}
+  <a class="res-card" href="{{ url_for('console.parties') }}">
+    <div class="rc-top"><span class="rc-label">Parties on the register</span>
+      <span class="rc-ico"><svg viewBox="0 0 20 20"><circle cx="7.5" cy="7" r="3"/><path d="M2.5 16c0-2.6 2.2-4.5 5-4.5s5 1.9 5 4.5"/><circle cx="14" cy="8.5" r="2.2"/><path d="M12.5 12.6c2.2-.4 4.6.9 4.6 3.9"/></svg></span></div>
+    <div class="rc-num">{{ n_parties }}</div>
+    <div class="rc-foot">{{ n_people }} person{{ 's' if n_people != 1 }} named inside groups</div>
+  </a>
+  {% endif %}
+</div>
+
+<div class="grid-main-rail">
+  <div>
+    <section class="card" data-table>
+      <div class="card-head">
+        <h2>Protected datasets</h2>
+        <a class="more" href="{{ url_for('console.storage') }}">Manage storage</a>
+      </div>
+      <div class="card-body flush">
+        {% if datasets %}
+        <table class="table">
+          <thead><tr><th>Name</th><th>Region</th><th>Status</th><th class="num">Blocks</th>
+            <th>Monitoring</th><th>Health</th></tr></thead>
+          <tbody>
+            {% for d in datasets[:6] %}
+            <tr>
+              <td><a class="link" href="{{ url_for('console.storage_detail', dataset_id=d.id) }}"><strong>{{ d.name }}</strong></a></td>
+              <td class="muted">{{ d.region }}</td>
+              <td><span class="st st-{{ 'ok' if d.status == 'active' else ('warn' if d.status == 'stale' else 'info') }}">{{ 'Active' if d.status == 'active' else ('Needs re-protection' if d.status == 'stale' else d.status|capitalize) }}</span></td>
+              <td class="num">{{ d.n_blocks }}</td>
+              <td>{% if d.audit_every_min %}<span class="st st-ok">Every {{ d.audit_every_min }} min</span>
+                  {% else %}<span class="st st-mut">Off</span>{% endif %}</td>
+              <td>
+                {% set total_a = d.audits.count() %}
+                {% if total_a %}
+                  {% set passed_a = d.audits.filter_by(passed=True).count() %}
+                  <span class="{{ 'muted' if passed_a == total_a else '' }}">{{ passed_a }}/{{ total_a }} verified</span>
+                {% else %}<span class="muted">not yet verified</span>{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty">
+          <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+          <p>No datasets under protection yet.</p>
+          <a class="btn btn-primary" href="{{ url_for('console.storage') }}">Browse the data catalog</a>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Recent verifications</h2>
+        <a class="more" href="{{ url_for('console.integrity') }}">Integrity Center</a>
+      </div>
+      <div class="card-body flush">
+        {% if recent_audits %}
+        <table class="table">
+          <thead><tr><th>Time</th><th>Dataset</th><th class="num">Coverage</th><th class="num">Latency</th><th>Result</th></tr></thead>
+          <tbody>
+            {% for a in recent_audits %}
+            <tr>
+              <td class="muted">{{ a.created_at.strftime("%d %b, %H:%M") }}</td>
+              <td>{{ a.dataset.name if a.dataset else "—" }}{% if a.note %} <span class="muted">({{ a.note }})</span>{% endif %}</td>
+              <td class="num">{{ a.challenged }}/{{ a.total_blocks }} blocks</td>
+              <td class="num">{{ "%.0f ms"|format(a.duration_ms) }}</td>
+              <td><span class="st st-{{ 'ok' if a.passed else 'err' }}">{{ "Passed" if a.passed else "Failed" }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty"><p>No verifications have run yet.</p></div>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Recent operations</h2>
+        <a class="more" href="{{ url_for('console.activity') }}">Activity Trail</a>
+      </div>
+      <div class="card-body flush">
+        {% if recent_events %}
+        <ul class="feed">
+          {% for e in recent_events %}
+          <li>
+            {% if e.kind == 'audit' %}
+              <span class="feed-icon {{ 'err' if 'FAIL' in e.summary else 'ok' }}"><svg viewBox="0 0 20 20"><path d="M4 10l4 4 8-9"/></svg></span>
+            {% elif e.kind in ['corrupt', 'revoke_owner'] %}
+              <span class="feed-icon err"><svg viewBox="0 0 20 20"><path d="M10 4v7M10 14.5v.5"/></svg></span>
+            {% elif e.kind == 'transfer' %}
+              <span class="feed-icon info"><svg viewBox="0 0 20 20"><path d="M4 7h11M12 4l3 3-3 3M16 13H5M8 10l-3 3 3 3"/></svg></span>
+            {% elif e.kind == 'attack' %}
+              <span class="feed-icon warn"><svg viewBox="0 0 20 20"><path d="M10 2l7 3v5c0 4.5-3 7.5-7 8.5C6 17.5 3 14.5 3 10V5z"/></svg></span>
+            {% else %}
+              <span class="feed-icon ok"><svg viewBox="0 0 20 20"><path d="M10 3v14M3 10h14"/></svg></span>
+            {% endif %}
+            <div>
+              <p>{{ e.summary }}</p>
+              <small>{{ e.created_at.strftime("%d %b %Y, %H:%M UTC") }}</small>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty"><p>Activity from your organization will appear here.</p></div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+
+  <div>
+    <section class="card">
+      <div class="card-head"><h2>Security posture</h2>
+        <a class="more" href="{{ url_for('console.security') }}">Security Center</a></div>
+      <div class="card-body">
+        {% set ring = 289.0 %}
+        {% set col = '#1a7f4e' if score >= 80 else ('#b26a00' if score >= 60 else '#c23934') %}
+        <div class="score-wrap">
+          <div class="score-gauge">
+            <svg viewBox="0 0 108 108">
+              <circle class="track" cx="54" cy="54" r="46"></circle>
+              <circle class="val" cx="54" cy="54" r="46" stroke="{{ col }}"
+                stroke-dasharray="{{ ring }}" stroke-dashoffset="{{ '%.1f'|format(ring * (1 - score / 100)) }}"></circle>
+            </svg>
+            <div class="score-num">{{ score }}<small>/ 100</small></div>
+          </div>
+          <ul class="score-notes">
+            {% for n in score_notes %}
+            <li class="{{ 'ok' if score >= 95 }}">{{ n }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    {% if show_billing %}
+    <section class="card">
+      <div class="card-head"><h2>Cost overview</h2>
+        <a class="more" href="{{ url_for('console.billing_page') }}">Billing</a></div>
+      <div class="card-body">
+        <div class="cost-line">
+          <span class="amount">${{ "%.2f"|format(cycle.total) }}</span>
+          <span class="period">{{ cycle.period }} · {{ cycle.days_left }} days left in cycle</span>
+        </div>
+        <div class="cost-rows">
+          <div><span>Protected storage</span><b>{{ "%.2f GB"|format(cycle.storage_gb) }}</b></div>
+          <div><span>Verifications this month</span><b>{{ "{:,}".format(cycle.verifications) }}</b></div>
+          <div><span>Ownership operations</span><b>{{ cycle.ownership_ops }}</b></div>
+        </div>
+      </div>
+      <div class="card-foot">Free plan: {{ cycle.free_tier.storage_gb|int }} GB storage,
+        {{ "{:,}".format(cycle.free_tier.verifications) }} verifications and
+        {{ cycle.free_tier.ownership_ops }} ownership operations included monthly.</div>
+    </section>
+    {% endif %}
+
+    <section class="card">
+      <div class="card-head"><h2>Announcements</h2></div>
+      <div class="card-body flush">
+        <ul class="ann-list">
+          <li><span class="ann-tag">NEW</span>
+            <p>Continuous verification schedules are now generally available on all plans.</p>
+            <small>Product update</small></li>
+          <li><span class="ann-tag">REGION</span>
+            <p>Frankfurt (eu-central-1) is now available for dataset protection.</p>
+            <small>Service availability</small></li>
+          <li><span class="ann-tag warn">NOTICE</span>
+            <p>Scheduled maintenance: Singapore control plane, Sunday 02:00–04:00 UTC.</p>
+            <small>Maintenance window</small></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Quick links</h2></div>
+      <div class="card-body flush">
+        <table class="table">
+          <tbody>
+            {% if show_access_keys %}
+            <tr><td><a href="{{ url_for('console.access_keys') }}">Access keys</a></td>
+              <td class="num muted">{{ n_keys }}</td></tr>
+            {% endif %}
+            <tr><td><a href="{{ url_for('console.support') }}">Open support tickets</a></td>
+              <td class="num muted">{{ open_tickets }}</td></tr>
+            <tr><td><a href="{{ url_for('console.activity') }}">Activity Trail</a></td>
+              <td class="num muted"></td></tr>
+            <tr><td><a href="{{ url_for('public.trust') }}" target="_blank">Trust &amp; compliance</a></td>
+              <td class="num muted"></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script>WorkbenchPage.init();</script>
+{% endblock %}

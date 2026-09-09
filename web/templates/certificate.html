@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ cert.certificate_id }} — Deed of Dataset Ownership Transfer</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/certificate.css') }}">
+</head>
+<body>
+
+<div class="doc-bar">
+  <div class="doc-bar-inner">
+    <a class="doc-home" href="{{ url_for('public.landing') }}">
+      <span class="doc-mark"></span> Attestra
+    </a>
+    <div class="doc-bar-actions">
+      <a href="{{ url_for('market.verify', id=cert.certificate_id) }}">Verify independently</a>
+      <a href="{{ url_for('market.certificate_json', certificate_id=cert.certificate_id) }}">Signed JSON</a>
+      <button onclick="window.print()">Print</button>
+    </div>
+  </div>
+</div>
+
+<article class="deed">
+
+  <header class="deed-head">
+    <div class="deed-seal">
+      <svg viewBox="0 0 72 72" aria-hidden="true">
+        <circle cx="36" cy="36" r="33"/><circle cx="36" cy="36" r="27"/>
+        <path d="M25 36.5l7.5 7.5L48 28.5"/>
+      </svg>
+    </div>
+    <div class="deed-issuer">
+      <span class="deed-authority">{{ p.issuer.name }}</span>
+      <h1>Deed of Dataset Ownership Transfer</h1>
+      <p class="deed-strap">Issued under the scalable cloud-auditing protocol for group
+        transactions. This instrument records a completed transfer of ownership in
+        outsourced data and the cryptographic evidence gathered at the moment of transfer.</p>
+    </div>
+    <div class="deed-ref">
+      <span class="lbl">Certificate number</span>
+      <span class="num">{{ cert.certificate_id }}</span>
+      <span class="lbl">Issued</span>
+      <span class="val">{{ cert.issued_at.strftime("%d %B %Y at %H:%M UTC") }}</span>
+      <span class="lbl">Instrument</span>
+      <span class="val">{{ p.instrument.agreement_ref }}</span>
+    </div>
+  </header>
+
+  {% if report.valid %}
+  <div class="deed-status ok">
+    <strong>This certificate verifies.</strong> All {{ report.checks|length }} checks pass
+    against the registry's published key. Confirm it yourself at
+    <span class="mono">/verify</span> using the number above.
+  </div>
+  {% else %}
+  <div class="deed-status bad">
+    <strong>This certificate does not verify.</strong> One or more checks failed — see the
+    verification record below before relying on this document.
+  </div>
+  {% endif %}
+
+  <section class="deed-section">
+    <h2>1 &nbsp; The parties</h2>
+    <div class="party-grid">
+      <div class="party">
+        <span class="role">Transferor &mdash; the party giving up ownership</span>
+        <span class="pname">{{ p.parties.transferor.legal_name }}</span>
+        <dl>
+          <dt>Type</dt><dd>{{ p.parties.transferor.type_label }}</dd>
+          <dt>Register reference</dt><dd class="mono">{{ p.parties.transferor.ref }}</dd>
+          <dt>Registration</dt><dd>{{ p.parties.transferor.registration_id or "Not recorded" }}</dd>
+          <dt>Jurisdiction</dt><dd>{{ p.parties.transferor.jurisdiction or "Not recorded" }}</dd>
+          <dt>Identity</dt><dd>{% if p.parties.transferor.verified %}Verified
+            &mdash; {{ p.parties.transferor.verification_method }}{% else %}Not verified{% endif %}</dd>
+        </dl>
+      </div>
+      <div class="party-arrow" aria-hidden="true">
+        <svg viewBox="0 0 40 20"><path d="M2 10h34M29 4l7 6-7 6"/></svg>
+      </div>
+      <div class="party">
+        <span class="role">Transferee &mdash; the party acquiring ownership</span>
+        <span class="pname">{{ p.parties.transferee.legal_name }}</span>
+        <dl>
+          <dt>Type</dt><dd>{{ p.parties.transferee.type_label }}</dd>
+          <dt>Register reference</dt><dd class="mono">{{ p.parties.transferee.ref }}</dd>
+          <dt>Registration</dt><dd>{{ p.parties.transferee.registration_id or "Not recorded" }}</dd>
+          <dt>Jurisdiction</dt><dd>{{ p.parties.transferee.jurisdiction or "Not recorded" }}</dd>
+          <dt>Identity</dt><dd>{% if p.parties.transferee.verified %}Verified
+            &mdash; {{ p.parties.transferee.verification_method }}{% else %}Not verified{% endif %}</dd>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="deed-section">
+    <h2>2 &nbsp; The asset</h2>
+    <p class="lead">The asset transferred is identified below by content, not by name. A
+      dataset with a different content digest is a different asset, whatever it is called.</p>
+    <table class="deed-table">
+      <tr><th>Dataset</th><td>{{ p.asset.name }}</td></tr>
+      <tr><th>Storage region</th><td>{{ p.asset.region }}</td></tr>
+      <tr><th>Resource identifier</th><td class="mono">{{ p.asset.fingerprint.resource_id }}</td></tr>
+      <tr><th>Content digest</th><td class="mono break">{{ p.asset.fingerprint.content_digest }}</td></tr>
+      <tr><th>File abstract</th><td class="mono break">{{ p.asset.fingerprint.file_abstract }}</td></tr>
+      <tr><th>Blocks under protection</th><td>{{ p.asset.fingerprint.block_count }}</td></tr>
+    </table>
+  </section>
+
+  <section class="deed-section">
+    <h2>3 &nbsp; Consideration</h2>
+    <table class="deed-table">
+      <tr><th>Amount</th><td class="amount">{{ p.consideration.currency }}
+        {{ "{:,.2f}".format(p.consideration.amount) }}</td></tr>
+      <tr><th>Payment reference</th>
+        <td class="mono">{{ p.consideration.payment_reference or "Not recorded" }}</td></tr>
+    </table>
+    {% if p.terms %}
+    <h3>Conditions agreed between the parties</h3>
+    <p class="terms">{{ p.terms }}</p>
+    {% endif %}
+  </section>
+
+  <section class="deed-section">
+    <h2>4 &nbsp; Evidence recorded at the moment of transfer</h2>
+    <p class="lead">These findings were produced by the protocol during execution, not
+      asserted afterwards by either party.</p>
+
+    {% set ev = p.evidence %}
+    <div class="evidence-grid">
+      <div class="ev {{ 'ev-ok' if ev.pre_transfer_audit.passed else 'ev-bad' }}">
+        <span class="ev-step">Before the sale</span>
+        <strong>{{ "The transferor held intact data" if ev.pre_transfer_audit.passed
+                 else "Possession could not be proved" }}</strong>
+        <span class="ev-detail">Integrity verification over
+          {{ ev.pre_transfer_audit.challenged }} of
+          {{ ev.pre_transfer_audit.total_blocks }} blocks,
+          {{ ev.pre_transfer_audit.detection_confidence_pct }}% detection confidence.</span>
+      </div>
+      <div class="ev {{ 'ev-ok' if ev.post_transfer_audit.passed else 'ev-bad' }}">
+        <span class="ev-step">After the sale</span>
+        <strong>{{ "The transferee holds the data" if ev.post_transfer_audit.passed
+                 else "The transferee could not prove possession" }}</strong>
+        <span class="ev-detail">Verified under the transferee's own credentials over
+          {{ ev.post_transfer_audit.challenged }} of
+          {{ ev.post_transfer_audit.total_blocks }} blocks.</span>
+      </div>
+      <div class="ev {{ 'ev-ok' if ev.transferor_revocation_check.passed == false else 'ev-bad' }}">
+        <span class="ev-step">Revocation check</span>
+        <strong>{{ "The transferor's credentials no longer verify"
+                 if ev.transferor_revocation_check.passed == false
+                 else "The transferor's credentials still verify" }}</strong>
+        <span class="ev-detail">Verification attempted with the transferor's retained
+          parameters and, as required after a completed sale,
+          {{ "failed" if ev.transferor_revocation_check.passed == false else "did not fail" }}.</span>
+      </div>
+    </div>
+
+    <table class="deed-table">
+      <tr><th>Protocol</th><td>{{ ev.protocol.scheme }}</td></tr>
+      <tr><th>Operation</th><td>{{ ev.protocol.operation }} over {{ ev.protocol.curve }}</td></tr>
+      <tr><th>Transfer token size</th><td>{{ ev.protocol.token_bytes }} bytes, constant</td></tr>
+      <tr><th>Execution time</th><td>{{ ev.protocol.seller_half_ms }} ms transferor half,
+        {{ ev.protocol.buyer_half_ms }} ms transferee half</td></tr>
+      <tr><th>Data copied to the transferee</th>
+        <td>{{ ev.protocol.bytes_of_data_moved }} bytes &mdash; the storage layer re-sealed
+          the existing blocks in place</td></tr>
+      <tr><th>Ownership moved</th>
+        <td class="mono">{{ ev.custody.from_group }} &rarr; {{ ev.custody.to_group }}</td></tr>
+    </table>
+
+    {% if ev.bls_signatures %}
+    {% set b = ev.bls_signatures %}
+    <h3 class="deed-sub">BLS signatures</h3>
+    <p class="lead">The signature material this transfer was carried out with, on the
+      {{ b.curve }} curve. The group public key is the aggregate of every current owner's
+      key: it is not the same value before and after the sale, and that difference is the
+      transfer. The aggregated tags are the signatures the storage provider produced to prove
+      possession, each verified by the auditor against the key of the moment.</p>
+    <table class="deed-table bls-table">
+      <tr><th>Curve</th><td>{{ b.curve }}</td></tr>
+      <tr><th>Group public key<br><span class="sub">before the sale</span></th>
+        <td class="mono wrap">{{ b.group_public_key_before }}</td></tr>
+      <tr><th>Group public key<br><span class="sub">after the sale</span></th>
+        <td class="mono wrap">{{ b.group_public_key_after }}</td></tr>
+      <tr><th>Aggregated tag<br><span class="sub">possession, before the sale</span></th>
+        <td class="mono wrap">{{ b.proof_before_sale }}</td></tr>
+      <tr><th>Aggregated tag<br><span class="sub">possession, after the sale</span></th>
+        <td class="mono wrap">{{ b.proof_after_sale }}</td></tr>
+      <tr><th>Aggregate masks after</th><td class="mono wrap">{{ b.aggregate_masks_after }}</td></tr>
+      <tr><th>Aggregate keys after</th><td class="mono wrap">{{ b.aggregate_keys_after }}</td></tr>
+      <tr><th>Encoding</th><td>{{ b.encoding }}</td></tr>
+    </table>
+    {% endif %}
+  </section>
+
+  <section class="deed-section">
+    <h2>5 &nbsp; Execution</h2>
+    {% set auth = p.authorisation or ev.authorisation %}
+    {% if auth and auth.basis == 'registry approval' %}
+    <p class="lead"><strong>This transfer was effected on the registry's approval.</strong>
+      {{ auth.description }} It was approved by {{ auth.approved_by }}{% if auth.note %},
+      recorded as: &ldquo;{{ auth.note }}&rdquo;{% endif %}. The signature that is present
+      below was applied to the terms in sections 1 to 3 as they stand; where a signature block
+      is blank, none was given.</p>
+    {% else %}
+    <p class="lead">Ownership did not move until both parties had signed. The signatures below
+      were applied to the terms in sections 1 to 3 as they stand.</p>
+    {% endif %}
+    <div class="sig-grid">
+      <div class="sig">
+        <span class="sig-role">For the transferor</span>
+        <span class="sig-name">{{ p.parties.transferor.legal_name }}</span>
+        <div class="sig-rule"></div>
+        {% if p.signatures.transferor.signature %}
+        <span class="sig-meta">Signed {{ p.signatures.transferor.signed_at }}</span>
+        <span class="sig-key mono">{{ p.signatures.transferor.signature[:32] }}…</span>
+        {% else %}
+        <span class="sig-meta">Not signed — effected on the registry's approval</span>
+        <span class="sig-key mono">no signature given</span>
+        {% endif %}
+      </div>
+      <div class="sig">
+        <span class="sig-role">For the transferee</span>
+        <span class="sig-name">{{ p.parties.transferee.legal_name }}</span>
+        <div class="sig-rule"></div>
+        {% if p.signatures.transferee.signature %}
+        <span class="sig-meta">Signed {{ p.signatures.transferee.signed_at }}</span>
+        <span class="sig-key mono">{{ p.signatures.transferee.signature[:32] }}…</span>
+        {% else %}
+        <span class="sig-meta">Not signed — effected on the registry's approval</span>
+        <span class="sig-key mono">no signature given</span>
+        {% endif %}
+      </div>
+    </div>
+    <p class="sig-note">{{ p.signatures.custody_model }}</p>
+    {% if auth and auth.basis == 'registry approval' %}
+    <p class="sig-note"><strong>Authority for this transfer:</strong> registry approval on the
+      application of the party that did sign. This deed does not assert that the other party
+      signed; it asserts that the registry effected the transfer on request, and records who
+      approved it.</p>
+    {% endif %}
+  </section>
+
+  <section class="deed-section">
+    <h2>6 &nbsp; Verification record</h2>
+    <p class="lead">Re-computed when this page was rendered, from the signed body itself.</p>
+    <ol class="check-list">
+      {% for c in report.checks %}
+      <li class="{{ 'pass' if c.passed else 'fail' }}">
+        <span class="check-mark" aria-hidden="true"></span>
+        <div><strong>{{ c.label }}</strong><span>{{ c.detail }}</span></div>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <footer class="deed-foot">
+    <div class="foot-block">
+      <span class="lbl">Issuing authority</span>
+      <span class="val">{{ p.issuer.name }}</span>
+      <span class="lbl">Signature algorithm</span>
+      <span class="val">{{ p.issuer.algorithm }}</span>
+    </div>
+    <div class="foot-block wide">
+      <span class="lbl">Issuer public key</span>
+      <span class="val mono break">{{ p.issuer.public_key }}</span>
+      <span class="lbl">Document hash (SHA-256)</span>
+      <span class="val mono break">{{ report.payload_hash }}</span>
+    </div>
+    <div class="foot-block">
+      <span class="lbl">Independent verification</span>
+      <span class="val">Present certificate number
+        <b class="mono">{{ cert.certificate_id }}</b> at the registry's public verification
+        page. No account is required.</span>
+    </div>
+    <p class="foot-fine">
+      This deed records a cryptographic transfer of control and the parties' signed agreement.
+      It attests to what the protocol observed and to what each party signed; it is not a
+      determination of either party's title prior to this transfer, and identity is recorded
+      to the standard shown in section 1.
+    </p>
+  </footer>
+</article>
+</body>
+</html>

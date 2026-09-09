@@ -1,0 +1,193 @@
+{% extends "base_public.html" %}
+{% block title %}{{ l.title }} — Attestra Marketplace{% endblock %}
+{% block content %}
+
+<section class="pd-hero">
+  <div class="shell">
+    <a class="pd-back" href="{{ url_for('market.marketplace') }}">&larr; All listings</a>
+    <span class="pd-cat">{{ l.category }}</span>
+    <h1>{{ l.title }}</h1>
+    <p class="hero-sub">{{ l.summary }}</p>
+    <div class="pd-buy">
+      <div class="pd-price">
+        <span class="lbl">Asking price</span>
+        <span class="amt">{{ l.price_display }}</span>
+        <span class="note">Ownership transfers on completion — no copy is shipped</span>
+        {% if open_offers %}<span class="note">{{ open_offers }} offer{{ 's' if open_offers != 1 }}
+          already on the table. The holder decides when to accept one — offers stay open until
+          then, and you can still make your own.</span>{% endif %}
+      </div>
+      {% if l.status in ('active', 'under_offer') %}
+        {% if not current_user.is_authenticated %}
+        <a class="btn btn-accent btn-lg"
+           href="{{ url_for('auth.signin', next=request.path) }}">Sign in to make an offer &rarr;</a>
+        {% elif is_holder %}
+        <span class="mk-flag lg">You hold this dataset</span>
+        {% else %}
+        <button class="btn btn-accent btn-lg" id="make-offer">Make an offer &rarr;</button>
+        {% endif %}
+        {% if open_offers %}<span class="mk-flag lg">{{ open_offers }} open offer{{ 's' if open_offers != 1 }}</span>{% endif %}
+      {% else %}
+      <span class="mk-flag lg sold">Sold</span>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% if current_user.is_authenticated and not is_holder and l.status in ('active', 'under_offer') %}
+<section class="section" id="offer-section" hidden>
+  <div class="shell">
+    <div class="offer-panel">
+      <div class="section-head">
+        <h2>Make an offer for {{ l.dataset.name }}</h2>
+        <p>You are bidding as <strong>{{ current_user.acting_as }}</strong>. Your offer is
+          signed with your registered key and sent to {{ l.seller.display_name }}, who can
+          accept it or turn it down. Nothing about the dataset changes until they do.</p>
+      </div>
+      <form id="offer-form" class="offer-form">
+        <label>Your offer ({{ l.currency }})
+          <input type="number" id="offer-amount" min="1" step="1" value="{{ l.price|int }}" required>
+          <span class="offer-note">Asking price is {{ l.price_display }}. You may offer less.</span>
+        </label>
+        <label>Terms you are proposing <span class="opt">(optional)</span>
+          <textarea id="offer-terms" rows="3"
+            placeholder="Payment on completion by NEFT; licence as listed."></textarea>
+        </label>
+        <div class="offer-actions">
+          <button class="btn btn-accent" type="submit">Send signed offer</button>
+          <button class="btn btn-ghost" type="button" id="offer-cancel">Cancel</button>
+        </div>
+        <p class="offer-result" id="offer-result" hidden></p>
+      </form>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <div class="shell mk-cols">
+    <div>
+      <div class="section-head"><h2>The asset</h2></div>
+      <table class="cmp">
+        <tr><th>Dataset</th><td>{{ l.dataset.name }}</td></tr>
+        <tr><th>Storage region</th><td>{{ l.dataset.region }}</td></tr>
+        <tr><th>Blocks under protection</th><td>{{ l.dataset.n_blocks }}</td></tr>
+        <tr><th>Size</th><td>{{ "{:,.1f}".format(l.dataset.total_bytes / 1048576) }} MB</td></tr>
+        <tr><th>Protected since</th><td>{{ l.dataset.created_at.strftime("%d %B %Y") }}</td></tr>
+        <tr><th>Continuous verification</th>
+          <td>{% if l.dataset.audit_every_min %}Every {{ l.dataset.audit_every_min }} minute(s)
+              {% else %}On demand{% endif %}</td></tr>
+      </table>
+
+      {% if l.licence_terms %}
+      <div class="section-head" style="margin-top:44px"><h2>Licence terms</h2></div>
+      <p class="mk-terms">{{ l.licence_terms }}</p>
+      {% endif %}
+
+      <div class="section-head" style="margin-top:44px"><h2>Chain of custody</h2>
+        <p>Every ownership event recorded against this dataset, in order.</p></div>
+      {% if chain %}
+      <ol class="custody">
+        {% for c in chain %}
+        <li>
+          <span class="cu-dot"></span>
+          <div class="cu-body">
+            <span class="cu-when">{{ c.created_at.strftime("%d %b %Y, %H:%M") }}</span>
+            <strong>{{ c.detail }}</strong>
+            {% if c.from_party and c.to_party %}
+          <span class="cu-move"><span class="cu-from">{{ c.from_party }}</span> &rarr; {{ c.to_party }}</span>
+          {% elif c.to_party %}
+          <span class="cu-move">Held by {{ c.to_party }}</span>
+          {% endif %}
+            {% if c.certificate_id %}
+            <a class="link-accent mono" href="{{ url_for('market.certificate_document', certificate_id=c.certificate_id) }}">{{ c.certificate_id }}</a>
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <p class="mk-terms">No ownership events have been recorded against this dataset yet.</p>
+      {% endif %}
+    </div>
+
+    <aside class="mk-side">
+      <div class="mk-card">
+        <span class="mk-card-h">Current holder</span>
+        <strong>{{ l.seller.display_name }}</strong>
+        <dl>
+          <dt>Legal name</dt><dd>{{ l.seller.legal_name }}</dd>
+          <dt>Type</dt><dd>{{ l.seller.type_label }}</dd>
+          <dt>Registration</dt><dd>{{ l.seller.registration_id or "Not recorded" }}</dd>
+          <dt>Jurisdiction</dt><dd>{{ l.seller.jurisdiction or "Not recorded" }}</dd>
+          <dt>Identity</dt>
+          <dd>{% if l.seller.verified %}<span class="mk-ok">Verified</span>
+              &mdash; {{ l.seller.verification_method }}{% else %}Not verified{% endif %}</dd>
+        </dl>
+      </div>
+      <div class="mk-card mk-card-quiet">
+        <span class="mk-card-h">What you receive</span>
+        <ul class="mk-list">
+          <li>Cryptographic ownership of the dataset in place</li>
+          <li>A signed certificate naming you as transferee</li>
+          <li>Proof the seller's credentials no longer verify</li>
+          <li>The right to verify integrity on demand, forever</li>
+        </ul>
+        <a class="link-accent" href="{{ url_for('market.verify') }}">See how verification works &rarr;</a>
+      </div>
+    </aside>
+  </div>
+</section>
+{% if current_user.is_authenticated and not is_holder and l.status in ('active', 'under_offer') %}
+<script>
+(function () {
+  var open = document.getElementById("make-offer");
+  var section = document.getElementById("offer-section");
+  var form = document.getElementById("offer-form");
+  var result = document.getElementById("offer-result");
+  if (!open || !section) return;
+  open.addEventListener("click", function () {
+    section.hidden = false;
+    section.scrollIntoView({ behavior: "smooth", block: "center" });
+    document.getElementById("offer-amount").focus();
+  });
+  document.getElementById("offer-cancel").addEventListener("click", function () {
+    section.hidden = true;
+  });
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var button = form.querySelector("button[type=submit]");
+    button.disabled = true;
+    button.textContent = "Signing your offer…";
+    result.hidden = true;
+    try {
+      var res = await fetch("/api/offers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listing_id: {{ l.id }},
+          amount: parseFloat(document.getElementById("offer-amount").value),
+          currency: {{ l.currency|tojson }},
+          terms: document.getElementById("offer-terms").value,
+        }),
+      });
+      var data = await res.json();
+      if (!res.ok || data.ok === false) throw new Error(data.error || "Your offer could not be sent.");
+      result.hidden = false;
+      result.className = "offer-result ok";
+      result.innerHTML = "Offer " + data.ref + " sent to {{ l.seller.display_name }}. " +
+        "<a href=\"" + data.href + "\">Track it in your console &rarr;</a>";
+      form.querySelector(".offer-actions").hidden = true;
+    } catch (err) {
+      result.hidden = false;
+      result.className = "offer-result bad";
+      result.textContent = err.message;
+      button.disabled = false;
+      button.textContent = "Send signed offer";
+    }
+  });
+})();
+</script>
+{% endif %}
+
+{% endblock %}

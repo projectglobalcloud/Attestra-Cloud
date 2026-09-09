@@ -1,0 +1,25 @@
+# Keep the image to the application: the protocol, the console and the catalog.
+# Everything else in this project is paperwork or local state.
+
+Docs/
+report/
+initial/
+*.md
+# fly.io/ itself must stay in the context: the Dockerfile copies the gunicorn
+# config and the entrypoint out of it. Only its notes are excluded (by *.md
+# above, and this).
+fly.io/README.md
+.DS_Store
+**/.DS_Store
+
+# Local state — the deployment keeps its own on the volume.
+web/instance/
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+**/.pytest_cache/
+
+# Test scaffolding and figures the console does not read.
+code/tests/
+code/benchmarks/figures/
+code/benchmarks/results/*full*.json

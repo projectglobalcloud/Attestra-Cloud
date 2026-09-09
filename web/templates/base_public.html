@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Attestra — Verifiable data custody for the cloud{% endblock %}</title>
+<meta name="description" content="Attestra keeps shared datasets verifiably intact in third-party storage and transfers their ownership between organizations with cryptographic finality.">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ff6a00'/><path d='M30 68 L50 30 L70 68 Z' fill='none' stroke='white' stroke-width='7' stroke-linejoin='round'/></svg>">
+</head>
+<body>
+
+<div class="promo-bar">
+  <div class="shell promo-inner">
+    <span class="promo-tag">NEW</span>
+    <span>Security Validation Suite — watch real attack scenarios fail against your data, live</span>
+    <a class="promo-cta" href="{{ url_for('public.trust') }}">Learn more</a>
+    <button class="promo-close" aria-label="Dismiss">&times;</button>
+  </div>
+</div>
+
+<header class="site-nav">
+  <div class="shell nav-inner">
+    <a class="brand" href="{{ url_for('public.landing') }}">
+      <span class="brand-mark" aria-hidden="true"></span> Attestra
+    </a>
+
+    <nav class="nav-links">
+      <div class="nav-item">
+        <a class="{{ 'active' if active_page == 'products' }}" href="{{ url_for('public.products') }}">Products <span class="caret"></span></a>
+        <div class="nav-menu">
+          <span class="nav-menu-label">Integrity</span>
+          <a href="{{ url_for('public.product_detail', slug='integrity-verification') }}">
+            <span class="t">Integrity Verification</span>
+            <span class="d">Continuous proof-of-possession for stored data</span></a>
+          <a href="{{ url_for('public.product_detail', slug='storage-catalog') }}">
+            <span class="t">Protected Storage Catalog</span>
+            <span class="d">Consortium-scale datasets, ready to protect</span></a>
+          <span class="nav-menu-label">Custody</span>
+          <a href="{{ url_for('public.product_detail', slug='ownership-transfer') }}">
+            <span class="t">Ownership Transfer</span>
+            <span class="d">Sell datasets with cryptographic finality</span></a>
+          <a href="{{ url_for('public.product_detail', slug='consortium-management') }}">
+            <span class="t">Consortium Management</span>
+            <span class="d">Shared ownership without shared secrets</span></a>
+          <span class="nav-menu-label">Governance &amp; Insights</span>
+          <a href="{{ url_for('public.product_detail', slug='security-validation') }}">
+            <span class="t">Security Validation Suite</span>
+            <span class="d">Live adversarial testing, on demand</span></a>
+          <a href="{{ url_for('public.product_detail', slug='analytics') }}">
+            <span class="t">Custody Analytics</span>
+            <span class="d">Live measurement of every operation</span></a>
+          <a href="{{ url_for('public.products') }}" style="border-top:1px solid var(--line);margin-top:8px">
+            <span class="t" style="color:var(--accent)">View all products →</span></a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a class="{{ 'active' if active_page == 'solutions' }}" href="{{ url_for('public.solutions') }}">Solutions <span class="caret"></span></a>
+        <div class="nav-menu">
+          <a href="{{ url_for('public.solutions') }}#healthcare"><span class="t">Healthcare consortia</span><span class="d">Multi-hospital imaging archives</span></a>
+          <a href="{{ url_for('public.solutions') }}#financial"><span class="t">Financial services</span><span class="d">Ledgers under statutory audit</span></a>
+          <a href="{{ url_for('public.solutions') }}#research"><span class="t">Research &amp; genomics</span><span class="d">Sequencing data sold to pharma</span></a>
+          <a href="{{ url_for('public.solutions') }}#ai"><span class="t">AI data supply chain</span><span class="d">Training corpora with provenance</span></a>
+          <a href="{{ url_for('public.solutions') }}#civic"><span class="t">Civic data infrastructure</span><span class="d">Public-records-grade custody chains</span></a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a class="{{ 'active' if active_page in ['pricing', 'free'] }}" href="{{ url_for('public.pricing') }}">Pricing <span class="caret"></span></a>
+        <div class="nav-menu">
+          <a href="{{ url_for('public.pricing') }}"><span class="t">Plans &amp; pricing</span><span class="d">Free, Team and Enterprise</span></a>
+          <a href="{{ url_for('public.free') }}"><span class="t">Free Tier</span><span class="d">Everything you can use at no cost</span></a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a class="{{ 'active' if active_page == 'marketplace' }}" href="{{ url_for('market.marketplace') }}">Marketplace <span class="caret"></span></a>
+        <div class="nav-menu">
+          <span class="nav-menu-label">Buy and sell</span>
+          <a href="{{ url_for('market.marketplace') }}"><span class="t">Browse datasets</span><span class="d">Listings with a verifiable chain of custody</span></a>
+          <a href="{{ url_for('market.verify') }}"><span class="t">Verify a certificate</span><span class="d">Check a deed of transfer — no account needed</span></a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a class="{{ 'active' if active_page == 'trust' }}" href="{{ url_for('public.trust') }}">Trust Center</a>
+      </div>
+      <div class="nav-item">
+        <a class="{{ 'active' if active_page == 'company' }}" href="{{ url_for('public.company') }}">Company</a>
+      </div>
+      <div class="nav-item">
+        <a class="{{ 'active' if active_page == 'contact' }}" href="{{ url_for('public.contact') }}">Contact</a>
+      </div>
+    </nav>
+
+    <div class="nav-search" title="Search (demo)">
+      <svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="6"/><path d="M13.5 13.5 18 18"/></svg>
+      Search
+    </div>
+
+    <div class="nav-utility">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('console.dashboard') }}">Console</a>
+      {% else %}
+        <a href="{{ url_for('auth.signin') }}">Sign in</a>
+      {% endif %}
+    </div>
+    <a class="btn btn-blue nav-cta" href="{{ url_for('auth.signup') if not current_user.is_authenticated else url_for('console.dashboard') }}">
+      {{ "Open console" if current_user.is_authenticated else "Start free" }}
+    </a>
+  </div>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="shell" style="padding-top:16px">
+    {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<section class="pre-footer">
+  <div class="shell pre-footer-inner">
+    <div>
+      <h2>Ready to put your storage on the record?</h2>
+      <p>Protect a dataset and see your first verification pass in under five minutes.</p>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <a class="btn btn-accent btn-lg" href="{{ url_for('auth.signup') }}">Start free <span class="arr">→</span></a>
+      <a class="btn btn-white btn-lg" href="{{ url_for('public.contact') }}">Contact sales</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="shell footer-grid">
+    <div class="footer-brand">
+      <a class="brand" href="{{ url_for('public.landing') }}">
+        <span class="brand-mark" aria-hidden="true"></span> Attestra
+      </a>
+      <p>Verifiable custody for datasets that live in other people's infrastructure — and change hands.</p>
+    </div>
+    <div>
+      <h4>Products</h4>
+      <a class="f" href="{{ url_for('public.product_detail', slug='integrity-verification') }}">Integrity Verification</a>
+      <a class="f" href="{{ url_for('public.product_detail', slug='ownership-transfer') }}">Ownership Transfer</a>
+      <a class="f" href="{{ url_for('public.product_detail', slug='consortium-management') }}">Consortium Management</a>
+      <a class="f" href="{{ url_for('public.product_detail', slug='security-validation') }}">Security Validation Suite</a>
+      <a class="f" href="{{ url_for('public.product_detail', slug='analytics') }}">Custody Analytics</a>
+      <a class="f" href="{{ url_for('public.products') }}">All products</a>
+    </div>
+    <div>
+      <h4>Solutions</h4>
+      <a class="f" href="{{ url_for('public.solutions') }}#healthcare">Healthcare consortia</a>
+      <a class="f" href="{{ url_for('public.solutions') }}#financial">Financial services</a>
+      <a class="f" href="{{ url_for('public.solutions') }}#research">Research &amp; genomics</a>
+      <a class="f" href="{{ url_for('public.solutions') }}#ai">AI data supply chain</a>
+      <a class="f" href="{{ url_for('public.solutions') }}#civic">Civic data</a>
+    </div>
+    <div>
+      <h4>Resources</h4>
+      <a class="f" href="{{ url_for('public.free') }}">Free Tier</a>
+      <a class="f" href="{{ url_for('public.pricing') }}">Pricing</a>
+      <a class="f" href="{{ url_for('public.trust') }}">Trust Center</a>
+      <a class="f" href="{{ url_for('public.company') }}#research">Research foundation</a>
+    </div>
+    <div>
+      <h4>Company</h4>
+      <a class="f" href="{{ url_for('public.company') }}">About</a>
+      <a class="f" href="{{ url_for('public.contact') }}">Contact sales</a>
+      <a class="f" href="{{ url_for('auth.signup') }}">Create account</a>
+      <a class="f" href="{{ url_for('auth.signin') }}">Console sign-in</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="shell" style="display:flex;gap:26px;flex-wrap:wrap">
+      <span>© 2026 Attestra</span>
+      <span>Academic demonstration platform · all datasets synthetic</span>
+      <span>Dept. of ISE, Global Academy of Technology</span>
+    </div>
+  </div>
+</footer>
+
+<div class="float-widget">
+  <a href="{{ url_for('public.contact') }}" title="Contact sales">
+    <svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01"/></svg>
+  </a>
+  <a href="{{ url_for('auth.signup') }}" title="Start free">
+    <svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg>
+  </a>
+</div>
+
+<div class="notice-bar">
+  <div class="shell notice-inner">
+    <p>This demonstration site stores only your account details and activity history,
+       locally. All datasets are synthetic; no real records are processed.</p>
+    <button class="btn btn-accent" data-notice-accept>Got it</button>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/site.js') }}"></script>
+</body>
+</html>

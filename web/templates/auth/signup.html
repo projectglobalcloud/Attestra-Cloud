@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create account · Attestra</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232a5788'/><path d='M30 68 L50 30 L70 68 Z' fill='none' stroke='white' stroke-width='7' stroke-linejoin='round'/></svg>">
+</head>
+<body class="auth-body">
+<div class="auth-split">
+  <div class="auth-panel">
+    <a class="brand" href="{{ url_for('public.landing') }}">
+      <span class="brand-mark" aria-hidden="true"></span> Attestra
+    </a>
+    <div class="auth-card">
+      <h1>Create your account</h1>
+      <p class="auth-sub">Protect a dataset and run your first verification in minutes.</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+      <form method="post">
+        <label>Full name
+          <input type="text" name="name" required autofocus autocomplete="name"
+                 value="{{ form.name or '' }}">
+        </label>
+        <label>Work email
+          <input type="email" name="email" required autocomplete="email"
+                 placeholder="you@organization.com" value="{{ form.email or '' }}">
+        </label>
+        <label>You are registering as
+          <select name="party_type" id="su-type">
+            {% for value, label in party_types %}
+            <option value="{{ value }}" {{ 'selected' if form.party_type == value }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label id="su-orglabel">Name on the ownership register
+          <input type="text" name="organization" autocomplete="organization"
+                 placeholder="Acme Data Consortium" value="{{ form.organization or '' }}">
+          <span class="hint" id="su-orghint">The entity that will hold and trade datasets.
+            Leave blank to register under your own name.</span>
+        </label>
+        <label>Registered legal name <span class="hint">(optional)</span>
+          <input type="text" name="legal_name" placeholder="Acme Data Consortium Private Limited"
+                 value="{{ form.legal_name or '' }}">
+        </label>
+        <div class="auth-row">
+          <label>Registration number <span class="hint">(optional)</span>
+            <input type="text" name="registration_id" placeholder="CIN / GSTIN"
+                   value="{{ form.registration_id or '' }}">
+          </label>
+          <label>Jurisdiction <span class="hint">(optional)</span>
+            <input type="text" name="jurisdiction" placeholder="Karnataka, India"
+                   value="{{ form.jurisdiction or '' }}">
+          </label>
+        </div>
+        <label>Password <span class="hint">(minimum 8 characters)</span>
+          <input type="password" name="password" required minlength="8"
+                 autocomplete="new-password">
+        </label>
+        <button class="btn btn-blue btn-block" type="submit">Create account</button>
+        <p class="auth-fine" style="margin-top:10px">Your entry goes on the ownership
+          register unverified. You can protect and list datasets straight away; the
+          registry verifies identities before a deed records you as verified.</p>
+      </form>
+      <script>
+        (function () {
+          var type = document.getElementById("su-type");
+          var hint = document.getElementById("su-orghint");
+          var label = document.getElementById("su-orglabel");
+          function apply() {
+            var t = type.value;
+            var isPerson = t === "individual";
+            label.childNodes[0].nodeValue = isPerson
+              ? "Name on the ownership register "
+              : (t === "group" ? "Group name " : "Organization name ");
+            hint.textContent = isPerson
+              ? "Leave blank to register under your own name."
+              : (t === "group"
+                ? "You become the group's owner; add the other members once you are signed in."
+                : "The entity that will hold and trade datasets.");
+          }
+          type.addEventListener("change", apply);
+          apply();
+        })();
+      </script>
+      <p class="auth-alt">Already registered?
+        <a href="{{ url_for('auth.signin') }}">Sign in</a></p>
+    </div>
+    <p class="auth-fine">Demonstration environment · all datasets synthetic</p>
+  </div>
+  <div class="auth-visual">
+    <div class="auth-quote">
+      <span class="mark">“</span>
+      <p>The sale closed in the afternoon. By evening our verifications passed,
+        theirs failed, and nobody had moved a single byte of the archive.</p>
+      <footer>Head of data acquisition, Helix Biosciences</footer>
+      <div class="auth-stats">
+        <div><b>0 B</b><span>data moved per transfer</span></div>
+        <div><b>5</b><span>consortium scenarios included</span></div>
+        <div><b>3</b><span>attack validations, run live</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

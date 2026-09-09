@@ -1,7 +1,7 @@
 # Deploying Attestra to Render
 
-Same application, same Docker image as the Fly.io setup — `render.yaml` here
-points at `../fly.io/Dockerfile`, so there is one image to maintain, not two.
+Same application, same Docker image as the Fly.io setup — The blueprint is `render.yaml` at the repository root (Render only looks
+there); it points at `../fly.io/Dockerfile`, so there is one image to maintain, not two.
 
 ---
 
@@ -66,7 +66,7 @@ Route A is genuinely the smoother one — but Route B is written out below.
    Note what is **not** committed: `web/instance/` (your local database and
    uploads) is excluded by `.dockerignore` and should stay out of the repo.
 3. In Render: **New → Blueprint**, choose the repository. It reads
-   `render/render.yaml` — confirm the plan is **Starter** and the disk is there.
+   `render.yaml` — confirm the plan is **Starter** and the disk is there.
 4. **Apply**. The first build takes a few minutes (the 125 MB catalog is in the
    image).
 5. When it is live, open the URL and **create your account first** — the first

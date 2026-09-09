@@ -1,10 +1,12 @@
 # Attestra on Render — Blueprint
 #
-# Render reads this file from the repository root and creates everything in it.
+# Render reads this file from the repository root — which is why it lives here
+# rather than beside its notes in render/ — and creates everything in it.
 # The image is the same one that was built and tested for Fly.io; only the
 # hosting around it differs.
 #
 # In the dashboard: New → Blueprint → point it at this repository.
+# The step-by-step instructions are in render/README.md.
 
 services:
   - type: web

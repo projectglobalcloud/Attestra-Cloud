@@ -4,7 +4,8 @@ Party registry and signing keys.
 Two kinds of key live here:
 
 * The **issuing key** — one Ed25519 key pair per deployment, held in
-  `instance/issuer_ed25519`. Every certificate this platform issues is signed
+  `instance/issuer_ed25519`, or in ATTESTRA_ISSUER_KEY where there is no
+  persistent disk. Every certificate this platform issues is signed
   with it, and the public half is printed on the certificate so a verifier can
   check the document without trusting (or even reaching) this database.
 
@@ -19,6 +20,7 @@ Two kinds of key live here:
 from __future__ import annotations
 
 import base64
+import os
 import re
 from pathlib import Path
 
@@ -52,6 +54,16 @@ def _issuer_path() -> Path:
 
 
 def issuer_private() -> Ed25519PrivateKey:
+    # A deployment without a persistent disk cannot keep this in a file: the
+    # filesystem is rebuilt on every restart, and a freshly generated key would
+    # silently invalidate every certificate already issued — the public half is
+    # printed on each deed, and a verifier checks against it. ATTESTRA_ISSUER_KEY
+    # carries the same base64 the file would, so the registry keeps one identity
+    # for the life of the deployment.
+    from_env = os.environ.get("ATTESTRA_ISSUER_KEY", "").strip()
+    if from_env:
+        return Ed25519PrivateKey.from_private_bytes(_unb64(from_env))
+
     path = _issuer_path()
     if not path.exists():
         key = Ed25519PrivateKey.generate()

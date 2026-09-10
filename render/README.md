@@ -5,46 +5,45 @@ there); it points at `../fly.io/Dockerfile`, so there is one image to maintain, 
 
 ---
 
-## The two things to decide first
+## How this deployment keeps its data
 
-### 1. Free will not work for this app
+The free plan has no persistent disk: the container's filesystem is rebuilt on
+every restart and every wake from sleep. Three things would otherwise be lost,
+and two of them are now handled.
 
-Render's free plan has **no persistent disk**. The filesystem resets on every
-restart and deploy, and free services also sleep after 15 minutes idle. For
-this platform that means, on every restart:
+**The database — handled.** Litestream replicates `attestra.db` to
+S3-compatible storage (this deployment uses Supabase Storage) as it changes,
+and restores it on boot. Accounts, datasets, parties, agreements, offers,
+deeds, custody history and the process feed all survive. Verified by building
+the image, signing up, protecting a dataset, destroying the container outright,
+and starting a fresh one: the account signed in, the dataset was there, and a
+verification passed against the restored state.
 
-- every account gone,
-- every uploaded dataset gone,
-- every issued deed gone,
-- the registry's own signing key regenerated — so deeds issued before it can no
-  longer be verified against the key printed on them.
+**The issuing key — handled.** `ATTESTRA_ISSUER_KEY` holds the registry's
+Ed25519 key. It must be set once and never changed: every deed carries the
+matching public key, and a verifier checks against it, so a new key silently
+invalidates every certificate already issued.
 
-That is not a demo you want a judge clicking into. So:
+**Uploaded files — NOT handled yet.** The bytes of a file a client uploads live
+on the container's filesystem, so they go on a restart. The database row
+survives but the dataset cannot be re-protected without them. The bundled
+catalog is inside the image, so those five datasets are always available.
+Moving uploads to the same bucket is the remaining piece of work.
 
-| | | |
-|---|---|---|
-| Web service, **Starter** plan | 512 MB RAM, always on | **$7.00/mo** |
-| Persistent disk | 3 GB | **$0.75/mo** |
-| | | **≈ $7.75/month** |
+Two consequences of the free plan worth stating plainly: the service sleeps
+after 15 minutes idle, so the first visitor after a quiet spell waits about a
+minute; and the verification scheduler does not run while it is asleep.
 
-(Fly.io works out at about $6/month for a 1 GB machine. Render is a little
-more, and gives you 512 MB rather than 1 GB at that price — enough for this
-app, but with less headroom for the pairing arithmetic.)
+Moving to a paid plan removes all of this — set `plan: starter`, restore the
+`disk:` block in `render.yaml`, and the S3 variables become optional.
 
-### 2. How the code reaches Render
+---
 
-Render deploys from a **Git repository** or from a **pre-built Docker image in a
-registry**. It cannot take an upload from your laptop the way `fly deploy` can.
+## Before you start
 
-- **Route A — private GitHub repo (easiest, all in the browser).** Push this
-  project to a private repo, then in Render: New → Blueprint → pick the repo.
-  Render builds the Dockerfile itself. Every later change is `git push`.
-- **Route B — no GitHub.** Build the image on your machine and push it to Docker
-  Hub, then create the service from that image. No repository anywhere, but you
-  rebuild and push by hand for each change.
-
-You said earlier you did not want to be forced through GitHub. For Render,
-Route A is genuinely the smoother one — but Route B is written out below.
+You need an S3-compatible bucket. Supabase Storage works and needs no payment
+card; Cloudflare R2 and AWS S3 also work but ask for one. From the provider,
+collect five values: endpoint, region, bucket name, access key id, secret.
 
 ---
 
@@ -115,20 +114,27 @@ Route A is genuinely the smoother one — but Route B is written out below.
 | Your own domain | Settings → Custom Domains, then the DNS records it prints |
 | Logs | The Logs tab (or `render logs` with their CLI) |
 | A shell on the server | The Shell tab |
-| Back up the database | Shell tab: `cp /data/instance/attestra.db /tmp/` then download |
+| Back up the database | It is already replicated to your bucket; download it from there |
 | Load the demo state | Shell tab: `cd /app/web && ATTESTRA_BASE=http://127.0.0.1:$PORT python3 seed_scenario.py` |
 
 ### Never change these two
 
-1. **One instance.** `numInstances: 1`. Scaling out breaks the in-memory model
-   described at the top of `render.yaml`.
-2. **Keep the disk.** `/data` holds the database, the uploads and
-   `issuer_ed25519`. **Back that key up** — lose it and previously issued deeds
-   can no longer be verified against the key printed on them.
+1. **One instance.** The free plan gives exactly one, which is what this app
+   requires: scaling out breaks the in-memory model described at the top of
+   `render.yaml`, and Litestream is a single-writer replicator — two writers
+   would corrupt the replica.
+2. **Never change `ATTESTRA_ISSUER_KEY`.** Every deed carries the matching
+   public key and a verifier checks against it, so replacing this value
+   silently invalidates every certificate already issued. Keep a copy of it
+   somewhere safe.
 
-### If Render ever sleeps or restarts the service
+### If Render sleeps or restarts the service
 
-Nothing is lost while the disk is attached. The protection keys are held in
-memory only, so they go — but the app now rebuilds them automatically the first
-time anybody touches a dataset, and the Storage page has a **Protect all**
-button to seal everything again in one press.
+The database comes back from the replica, so accounts, datasets, agreements and
+deeds are all still there. Two things do change:
+
+* Datasets read **stale**, because the protection keys live in memory only. The
+  app rebuilds them automatically the first time anybody touches a dataset, and
+  the Storage page has a **Protect all** button to seal everything in one press.
+* A dataset a client *uploaded* cannot be rebuilt — its bytes went with the
+  filesystem. Catalog datasets are in the image and are always fine.

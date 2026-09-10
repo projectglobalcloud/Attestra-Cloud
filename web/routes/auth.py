@@ -5,6 +5,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 from extensions import db
 from models import (MEMBERSHIP_TYPES, PARTY_TYPES, PARTY_TYPE_NAMES, LoginRow,
+                    ensure_administrator,
                     User, record_event)
 from services import registry
 
@@ -67,6 +68,13 @@ def signup():
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
+            # A brand-new deployment has no operator: the startup check runs
+            # against an empty table and finds nobody to promote. Whoever
+            # registers first is therefore promoted here, at the moment there
+            # is finally an account to promote — otherwise nobody could approve
+            # a transfer or verify an identity until the service happened to
+            # restart.
+            ensure_administrator()
             record_event("signup",
                          f"{name} registered {party.display_name} "
                          f"({party.type_label}) as {party.party_ref}")

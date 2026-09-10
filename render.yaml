@@ -2,11 +2,20 @@
 #
 # Render reads this file from the repository root — which is why it lives here
 # rather than beside its notes in render/ — and creates everything in it.
-# The image is the same one that was built and tested for Fly.io; only the
-# hosting around it differs.
+# The image is the same one built for Fly.io; only the hosting differs.
 #
 # In the dashboard: New → Blueprint → point it at this repository.
 # The step-by-step instructions are in render/README.md.
+#
+# THIS CONFIGURATION RUNS ON THE FREE PLAN, which has no persistent disk. The
+# database survives anyway: Litestream restores it from S3-compatible storage
+# on boot and streams changes back up (see fly.io/entrypoint.sh), and the
+# registry's issuing key comes from ATTESTRA_ISSUER_KEY rather than a file.
+# What does NOT survive a restart is the bytes of client-uploaded files — the
+# bundled catalog is in the image and is always present.
+#
+# To move to a paid plan later: set `plan: starter`, restore the `disk:` block
+# below, and the S3 variables become optional.
 
 services:
   - type: web
@@ -15,35 +24,55 @@ services:
     dockerfilePath: ./fly.io/Dockerfile     # the same image, shared by both targets
     dockerContext: .
     region: singapore                       # closest Render region to India
-    plan: starter                           # NOT free — see the note below on disks
+    plan: free
 
-    # ONE INSTANCE, ALWAYS. The protection keys, the live protocol state and
-    # the verification scheduler live in one process's memory by design (keys
-    # are never written to disk). A second instance would be a second, empty
-    # universe: a dataset protected in one would read as "needs re-protection"
-    # in the other.
-    numInstances: 1
+    # ONE INSTANCE, ALWAYS — the free plan gives exactly one, which is what this
+    # app requires. The protection keys, the live protocol state and the
+    # verification scheduler live in one process's memory by design (keys are
+    # never written to disk), and Litestream is a single-writer replicator. A
+    # second instance would be a second, empty universe: a dataset protected in
+    # one would read as "needs re-protection" in the other, and two writers
+    # would corrupt the replica.
 
     healthCheckPath: /
 
-    # Everything that must outlive a deploy. Without this disk the database,
-    # the uploaded datasets and the registry's issuing key are wiped on every
-    # restart — which is why the free plan is not an option here.
-    disk:
-      name: attestra-data
-      mountPath: /data
-      sizeGB: 3
+    # A paid plan would add the disk that makes all of the above unnecessary:
+    # disk:
+    #   name: attestra-data
+    #   mountPath: /data
+    #   sizeGB: 3
 
     envVars:
       - key: ATTESTRA_INSTANCE_DIR
         value: /data/instance
+      # 512 MB of RAM on the free plan; a large upload would exhaust it.
       - key: ATTESTRA_MAX_UPLOAD_MB
-        value: "512"
+        value: "64"
       # Hidden sections. Set either to "1" to bring one back.
       - key: ATTESTRA_ACCESS_KEYS
         value: "0"
       - key: ATTESTRA_BILLING
         value: "0"
-      # Generated once by Render and kept; sessions then survive a disk reset.
+      # Generated once by Render and kept, so sessions survive a restart.
       - key: SECRET_KEY
         generateValue: true
+
+      # The registry's Ed25519 issuing key, base64 of the raw 32 bytes.
+      # Every deed carries the matching public key, so losing this value means
+      # previously issued certificates can no longer be verified. Set it once
+      # and never change it.
+      - key: ATTESTRA_ISSUER_KEY
+        sync: false
+
+      # Where Litestream keeps the database. Supabase Storage, Cloudflare R2
+      # and AWS S3 all work; these are entered in the dashboard, never here.
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false

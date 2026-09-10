@@ -31,12 +31,35 @@ COPY web/ /app/web/
 RUN cd /app/code && python -m datasets.generate --dataset all --size medium --quiet \
     && du -sh /app/code/datasets/data
 
+# Litestream replicates the SQLite database to S3-compatible storage
+# (Supabase, R2, S3). It is what makes a host with no persistent disk viable:
+# the database is restored on boot and streamed back up as it changes. Safe
+# here only because this app runs exactly one instance — see gunicorn.conf.py.
+ARG TARGETARCH
+RUN set -eux; \
+    case "${TARGETARCH:-amd64}" in \
+      amd64) LS_ARCH=x86_64 ;; \
+      arm64) LS_ARCH=arm64 ;; \
+      *) echo "unsupported architecture: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends curl ca-certificates; \
+    curl -fsSL -o /tmp/litestream.tar.gz \
+      "https://github.com/benbjohnson/litestream/releases/download/v0.5.17/litestream-0.5.17-linux-${LS_ARCH}.tar.gz"; \
+    tar -C /usr/local/bin -xzf /tmp/litestream.tar.gz litestream; \
+    rm -f /tmp/litestream.tar.gz; \
+    apt-get purge -y --auto-remove curl; \
+    rm -rf /var/lib/apt/lists/*; \
+    litestream version
+
 COPY fly.io/gunicorn.conf.py /app/gunicorn.conf.py
 COPY fly.io/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# Everything that must outlive a deploy lives on the mounted volume: the
-# database, the uploaded files, the registry's issuing key, the session secret.
+# Everything that must outlive a deploy lives under the instance directory.
+# On a host with a volume that directory is the volume. Without one, the
+# database is kept alive by Litestream and the issuing key by
+# ATTESTRA_ISSUER_KEY; uploaded files do not yet survive (see render/README).
 ENV ATTESTRA_INSTANCE_DIR=/data/instance \
     PORT=8080 \
     PYTHONPATH=/app/code

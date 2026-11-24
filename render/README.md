@@ -53,7 +53,7 @@ collect five values: endpoint, region, bucket name, access key id, secret.
 2. From the project root:
 
    ```bash
-   cd "/Users/adithyan/Desktop/project global cloud"
+   cd "path/to/Attestra-Cloud"
    git init
    git add code web fly.io render .dockerignore
    git commit -m "Attestra — protocol, console and deployment"
@@ -82,12 +82,12 @@ collect five values: endpoint, region, bucket name, access key id, secret.
 2. Build and push (from the project root):
 
    ```bash
-   cd "/Users/adithyan/Desktop/project global cloud"
+   cd "path/to/Attestra-Cloud"
    docker build --platform linux/amd64 -f fly.io/Dockerfile -t <dockerhub-user>/attestra:latest .
    docker push <dockerhub-user>/attestra:latest
    ```
 
-   `--platform linux/amd64` matters: your Mac is ARM, Render runs x86.
+   `--platform linux/amd64` matters on an Apple Silicon Mac: the Mac is ARM and Render runs x86.
 
 3. In Render: **New → Web Service → Deploy an existing image**, give it
    `<dockerhub-user>/attestra:latest`, then set by hand what `render.yaml`

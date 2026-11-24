@@ -78,7 +78,7 @@ fly auth whoami
 ## 3. Create the app (from the project root — not from this folder)
 
 ```bash
-cd "/Users/adithyan/Desktop/project global cloud"
+cd "path/to/Attestra-Cloud"
 fly apps create attestra-registry
 ```
 

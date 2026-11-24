@@ -1830,7 +1830,7 @@ const PartiesPage = {
             <span class="field-note" id="pt-emailnote">Optional for an organization.</span>
           </label>
           <label id="pt-ownername" hidden>Owner's name
-            <input type="text" name="owner_name" placeholder="Adithyan Murthy">
+            <input type="text" name="owner_name" placeholder="Ananya Rao">
           </label>
           <div id="pt-members" hidden>
             <label>Collaborators <span class="hint">(added by email)</span></label>

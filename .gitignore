@@ -25,3 +25,6 @@ venv/
 
 # Benchmark artefacts that are regenerated, not source
 code/benchmarks/results/*_full.json
+
+# Created on first run by the START scripts. Not source.
+.tools/
